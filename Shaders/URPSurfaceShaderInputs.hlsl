@@ -67,6 +67,9 @@ struct VertexOutputShadows
 #if defined(REQUIRES_SCREEN_POS)
 	float4 screenPos 	: TEXCOORD1;
 #endif
+
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+    UNITY_VERTEX_OUTPUT_STEREO
 };
 
 #endif //URP_SURFACE_SHADER_INPUTS_INCLUDED

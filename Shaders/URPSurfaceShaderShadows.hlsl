@@ -45,6 +45,7 @@ VertexOutputShadows vert(VertexInputShadows input)
 {
     VertexOutputShadows output;
     UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 	
 	UPDATE_SHADOWS_VERTEX(input);
 
@@ -60,6 +61,8 @@ VertexOutputShadows vert(VertexInputShadows input)
 
 half4 frag(VertexOutputShadows input) : SV_TARGET
 { 
+	UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+	
     return GET_SHADOWS(input);
 }
 

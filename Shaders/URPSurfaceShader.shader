@@ -158,8 +158,8 @@ Shader "Universal Render Pipeline/Surface Shader"
             #pragma exclude_renderers d3d11_9x
             #pragma target 2.0
 
-            #pragma vertex DepthOnlyVertex
-            #pragma fragment DepthOnlyFragment
+            #pragma vertex vert
+            #pragma fragment frag
 
             // -------------------------------------
             // Material Keywords
@@ -170,8 +170,7 @@ Shader "Universal Render Pipeline/Surface Shader"
             // GPU Instancing
             #pragma multi_compile_instancing
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
+            #include "URPSurfaceShaderShadows.hlsl"
             ENDHLSL
         }
 
