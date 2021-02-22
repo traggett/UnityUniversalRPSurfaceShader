@@ -1,10 +1,10 @@
-#ifndef EXAMPLE_SHADER_INCLUDED
-#define EXAMPLE_SHADER_INCLUDED
+#ifndef URP_EXAMPLE_SURFACE_SHADER_INCLUDED
+#define URP_EXAMPLE_SURFACE_SHADER_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
-#include "URPSurfaceShaderInputs.hlsl"
+#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderInputs.hlsl"
 
 TEXTURE2D(_MainTex);
 SAMPLER(sampler_MainTex);
@@ -54,6 +54,6 @@ inline void GetSurfaceData(float2 uv, out SurfaceData outSurfaceData)
 	outSurfaceData.albedo = lerp(outSurfaceData.albedo, half3(1,0,0), flash);
 }
 
-#include "Assets/ThirdParty/UnityURPSurfaceShader/Shaders/URPSurfaceShader.hlsl"
+#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShader.hlsl"
 
-#endif // EXAMPLE_SHADER_INCLUDED
+#endif // URP_EXAMPLE_SURFACE_SHADER_INCLUDED

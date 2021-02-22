@@ -48,7 +48,7 @@ void InitializeInputData(VertexOutput input, half3 normalTS, out InputData input
 //                  Surface Functions			                             //
 ///////////////////////////////////////////////////////////////////////////////
 
-inline void dontUpdateVertex(inout VertexOutput i)
+inline void dontUpdateVertex(inout VertexInput i)
 {
 
 }

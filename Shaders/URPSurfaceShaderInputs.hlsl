@@ -2,6 +2,7 @@
 #define URP_SURFACE_SHADER_INPUTS_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 
 struct VertexInput
 {
