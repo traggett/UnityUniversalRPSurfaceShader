@@ -44,6 +44,7 @@ void InitializeInputData(VertexOutput input, half3 normalTS, out InputData input
     inputData.bakedGI = SAMPLE_GI(input.lightmapUV, input.vertexSH, inputData.normalWS);
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 //                  Surface Functions			                             //
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,26 +54,30 @@ inline void dontUpdateVertex(inout VertexInput i)
 
 }
 
-inline void GetDefaultSurfaceData(float2 uv, out SurfaceData outSurfaceData)
+inline SurfaceData GetDefaultSurfaceData(VertexOutput vertex)
 {
-    half4 albedoAlpha = SampleAlbedoAlpha(uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
-    outSurfaceData.alpha = Alpha(albedoAlpha.a, _BaseColor, _Cutoff);
+	SurfaceData surfaceOutput;
+	
+    half4 albedoAlpha = SampleAlbedoAlpha(vertex.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
+    surfaceOutput.alpha = Alpha(albedoAlpha.a, _BaseColor, _Cutoff);
 
-    half4 specGloss = SampleMetallicSpecGloss(uv, albedoAlpha.a);
-    outSurfaceData.albedo = albedoAlpha.rgb * _BaseColor.rgb;
+    half4 specGloss = SampleMetallicSpecGloss(vertex.uv, albedoAlpha.a);
+    surfaceOutput.albedo = albedoAlpha.rgb * _BaseColor.rgb;
 
 #if _SPECULAR_SETUP
-    outSurfaceData.metallic = 1.0h;
-    outSurfaceData.specular = specGloss.rgb;
+    surfaceOutput.metallic = 1.0h;
+    surfaceOutput.specular = specGloss.rgb;
 #else
-    outSurfaceData.metallic = specGloss.r;
-    outSurfaceData.specular = half3(0.0h, 0.0h, 0.0h);
+    surfaceOutput.metallic = specGloss.r;
+    surfaceOutput.specular = half3(0.0h, 0.0h, 0.0h);
 #endif
 
-    outSurfaceData.smoothness = specGloss.a;
-    outSurfaceData.normalTS = SampleNormal(uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
-    outSurfaceData.occlusion = SampleOcclusion(uv);
-    outSurfaceData.emission = SampleEmission(uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
+    surfaceOutput.smoothness = specGloss.a;
+    surfaceOutput.normalTS = SampleNormal(vertex.uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
+    surfaceOutput.occlusion = SampleOcclusion(vertex.uv);
+    surfaceOutput.emission = SampleEmission(vertex.uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
+	
+	return surfaceOutput;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -125,6 +130,13 @@ VertexOutput LitPassVertex(VertexInput input)
 
     output.positionCS = vertexInput.positionCS;
 
+#if defined(REQUIRES_WORLD_REFL)
+	output.worldRefl = reflect(output.viewDirWS, output.normalWS);
+#endif
+#if defined(REQUIRES_SCREEN_POS)
+	output.screenPos = ComputeScreenPos(output.positionCS);
+#endif
+
     return output;
 }
 
@@ -134,8 +146,7 @@ half4 LitPassFragment(VertexOutput input) : SV_Target
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-    SurfaceData surfaceData;
-    GET_SURFACE_PROPERTIES(input.uv, surfaceData);
+    SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
 
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);

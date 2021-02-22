@@ -35,6 +35,14 @@ struct VertexOutput
     float4 shadowCoord              : TEXCOORD7;
 #endif
 
+#if defined(REQUIRES_SCREEN_POS)
+	float4 screenPos 				: TEXCOORD8;
+#endif
+
+#if defined(REQUIRES_WORLD_REFL)
+	float3 worldRefl 				: TEXCOORD9;
+#endif
+
     float4 positionCS               : SV_POSITION;
     UNITY_VERTEX_INPUT_INSTANCE_ID
     UNITY_VERTEX_OUTPUT_STEREO
