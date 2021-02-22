@@ -20,7 +20,7 @@ void InitializeInputData(VertexOutput input, half3 normalTS, out InputData input
 #endif
 
     half3 viewDirWS = SafeNormalize(input.viewDirWS);
-#ifdef _NORMALMAP
+#if defined(_NORMALMAP) || defined(_DETAIL)
     float sgn = input.tangentWS.w;      // should be either +1 or -1
     float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
     inputData.normalWS = TransformTangentToWorld(normalTS, half3x3(input.tangentWS.xyz, bitangent.xyz, input.normalWS.xyz));
@@ -42,8 +42,9 @@ void InitializeInputData(VertexOutput input, half3 normalTS, out InputData input
     inputData.fogCoord = input.fogFactorAndVertexLight.x;
     inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
     inputData.bakedGI = SAMPLE_GI(input.lightmapUV, input.vertexSH, inputData.normalWS);
+    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+    inputData.shadowMask = SAMPLE_SHADOWMASK(input.lightmapUV);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //                  Surface Functions			                             //
@@ -76,7 +77,23 @@ inline SurfaceData GetDefaultSurfaceData(VertexOutput input)
     surfaceOutput.normalTS = SampleNormal(input.uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
     surfaceOutput.occlusion = SampleOcclusion(input.uv);
     surfaceOutput.emission = SampleEmission(input.uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
-	
+
+#if defined(_CLEARCOAT) || defined(_CLEARCOATMAP)
+    half2 clearCoat = SampleClearCoat(input.uv);
+    surfaceOutput.clearCoatMask       = clearCoat.r;
+    surfaceOutput.clearCoatSmoothness = clearCoat.g;
+#else
+    surfaceOutput.clearCoatMask       = 0.0h;
+    surfaceOutput.clearCoatSmoothness = 0.0h;
+#endif
+
+#if defined(_DETAIL)
+	half detailMask = SAMPLE_TEXTURE2D(_DetailMask, sampler_DetailMask, input.uv).a;
+	float2 detailUv = input.uv * _DetailAlbedoMap_ST.xy + _DetailAlbedoMap_ST.zw;
+	surfaceOutput.albedo = ApplyDetailAlbedo(detailUv, surfaceOutput.albedo, detailMask);
+	surfaceOutput.normalTS = ApplyDetailNormal(detailUv, surfaceOutput.normalTS, detailMask);
+#endif
+
 	return surfaceOutput;
 }
 
@@ -84,15 +101,16 @@ inline SurfaceData GetDefaultSurfaceData(VertexOutput input)
 //                  Vertex and Fragment functions                            //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Used in Standard (Physically Based) shader
 VertexOutput vert(VertexInput input)
 {
     VertexOutput output = (VertexOutput)0;
 
-	UPDATE_VERTEX(input);
-
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+	
+	UPDATE_VERTEX(input);
 
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 
@@ -100,7 +118,8 @@ VertexOutput vert(VertexInput input)
     // this is required to avoid skewing the direction during interpolation
     // also required for per-vertex lighting and SH evaluation
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
-    float3 viewDirWS = GetCameraPositionWS() - vertexInput.positionWS;
+
+    half3 viewDirWS = GetWorldSpaceViewDir(vertexInput.positionWS);
     half3 vertexLight = VertexLighting(vertexInput.positionWS, normalInput.normalWS);
     half fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
 
@@ -109,9 +128,17 @@ VertexOutput vert(VertexInput input)
     // already normalized from normal transform to WS.
     output.normalWS = normalInput.normalWS;
     output.viewDirWS = viewDirWS;
-#ifdef _NORMALMAP
+#if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR) || defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
     real sign = input.tangentOS.w * GetOddNegativeScale();
-    output.tangentWS = half4(normalInput.tangentWS.xyz, sign);
+    half4 tangentWS = half4(normalInput.tangentWS.xyz, sign);
+#endif
+#if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
+    output.tangentWS = tangentWS;
+#endif
+
+#if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
+    half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, viewDirWS);
+    output.viewDirTS = viewDirTS;
 #endif
 
     OUTPUT_LIGHTMAP_UV(input.lightmapUV, unity_LightmapST, output.lightmapUV);
@@ -129,13 +156,6 @@ VertexOutput vert(VertexInput input)
 
     output.positionCS = vertexInput.positionCS;
 
-#if defined(REQUIRES_WORLD_REFL)
-	output.worldRefl = reflect(output.viewDirWS, output.normalWS);
-#endif
-#if defined(REQUIRES_SCREEN_POS)
-	output.screenPos = ComputeScreenPos(output.positionCS);
-#endif
-
     return output;
 }
 
@@ -144,12 +164,21 @@ half4 frag(VertexOutput input) : SV_Target
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-    SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
+#if defined(_PARALLAXMAP)
+#if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
+    half3 viewDirTS = input.viewDirTS;
+#else
+    half3 viewDirTS = GetViewDirectionTangentSpace(input.tangentWS, input.normalWS, input.viewDirWS);
+#endif
+    ApplyPerPixelDisplacement(viewDirTS, input.uv);
+#endif
 
+    SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
+    
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);
 
-    half4 color = UniversalFragmentPBR(inputData, surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.occlusion, surfaceData.emission, surfaceData.alpha);
+    half4 color = UniversalFragmentPBR(inputData, surfaceData);
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
     color.a = OutputAlpha(color.a, _Surface);

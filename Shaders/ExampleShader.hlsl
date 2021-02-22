@@ -31,7 +31,6 @@ inline void updateShadowsVertex(inout VertexInputShadows i)
 // Use this to update data in the per pixel pass
 //
 
-
 inline SurfaceData GetSurfaceData(VertexOutput input)
 {
 	SurfaceData surfaceOutput;
@@ -54,6 +53,22 @@ inline SurfaceData GetSurfaceData(VertexOutput input)
     surfaceOutput.normalTS = SampleNormal(input.uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
     surfaceOutput.occlusion = SampleOcclusion(input.uv);
     surfaceOutput.emission = SampleEmission(input.uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
+
+#if defined(_CLEARCOAT) || defined(_CLEARCOATMAP)
+    half2 clearCoat = SampleClearCoat(input.uv);
+    surfaceOutput.clearCoatMask       = clearCoat.r;
+    surfaceOutput.clearCoatSmoothness = clearCoat.g;
+#else
+    surfaceOutput.clearCoatMask       = 0.0h;
+    surfaceOutput.clearCoatSmoothness = 0.0h;
+#endif
+
+#if defined(_DETAIL)
+	half detailMask = SAMPLE_TEXTURE2D(_DetailMask, sampler_DetailMask, input.uv).a;
+	float2 detailUv = input.uv * _DetailAlbedoMap_ST.xy + _DetailAlbedoMap_ST.zw;
+	surfaceOutput.albedo = ApplyDetailAlbedo(detailUv, surfaceOutput.albedo, detailMask);
+	surfaceOutput.normalTS = ApplyDetailNormal(detailUv, surfaceOutput.normalTS, detailMask);
+#endif
 	
 	//Lerp albedo to red over time
 	float flash = (_SinTime[3] + 1) * 0.5;
