@@ -1,18 +1,26 @@
 #ifndef URP_EXAMPLE_SURFACE_SHADER_INCLUDED
 #define URP_EXAMPLE_SURFACE_SHADER_INCLUDED
 
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
+// Include this at the start of your file
 #include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderInputs.hlsl"
+
+// Use these defines to modify the shader (all are optional)
+#define UPDATE_VERTEX updateVertex
+#define GET_SURFACE_PROPERTIES GetSurfaceData
+#define UPDATE_SHADOWS_VERTEX updateShadowsVertex
 
 ////////////////////////////////////////
 // Use this to update data in the per vertex pass
 //
 
-#define UPDATE_VERTEX updateVertex
-
 inline void updateVertex(inout VertexInput i)
+{
+	//Stretch vertex position over time
+	float3 wobble = _CosTime[3] * i.positionOS.x;
+	i.positionOS.xyz += wobble;
+}
+
+inline void updateShadowsVertex(inout VertexInputShadows i)
 {
 	//Stretch vertex position over time
 	float3 wobble = _CosTime[3] * i.positionOS.x;
@@ -23,16 +31,15 @@ inline void updateVertex(inout VertexInput i)
 // Use this to update data in the per pixel pass
 //
 
-#define GET_SURFACE_PROPERTIES GetSurfaceData
 
-inline SurfaceData GetSurfaceData(VertexOutput vertex)
+inline SurfaceData GetSurfaceData(VertexOutput input)
 {
 	SurfaceData surfaceOutput;
 	
-    half4 albedoAlpha = SampleAlbedoAlpha(vertex.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
+    half4 albedoAlpha = SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
     surfaceOutput.alpha = Alpha(albedoAlpha.a, _BaseColor, _Cutoff);
 
-    half4 specGloss = SampleMetallicSpecGloss(vertex.uv, albedoAlpha.a);
+    half4 specGloss = SampleMetallicSpecGloss(input.uv, albedoAlpha.a);
     surfaceOutput.albedo = albedoAlpha.rgb * _BaseColor.rgb;
 
 #if _SPECULAR_SETUP
@@ -44,9 +51,9 @@ inline SurfaceData GetSurfaceData(VertexOutput vertex)
 #endif
 
     surfaceOutput.smoothness = specGloss.a;
-    surfaceOutput.normalTS = SampleNormal(vertex.uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
-    surfaceOutput.occlusion = SampleOcclusion(vertex.uv);
-    surfaceOutput.emission = SampleEmission(vertex.uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
+    surfaceOutput.normalTS = SampleNormal(input.uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
+    surfaceOutput.occlusion = SampleOcclusion(input.uv);
+    surfaceOutput.emission = SampleEmission(input.uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
 	
 	//Lerp albedo to red over time
 	float flash = (_SinTime[3] + 1) * 0.5;
@@ -55,6 +62,7 @@ inline SurfaceData GetSurfaceData(VertexOutput vertex)
 	return surfaceOutput;
 }
 
+// Include this at the end of your file
 #include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShader.hlsl"
 
 #endif // URP_EXAMPLE_SURFACE_SHADER_INCLUDED

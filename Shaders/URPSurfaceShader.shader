@@ -105,8 +105,8 @@ Shader "Universal Render Pipeline/Surface Shader"
             // GPU Instancing
             #pragma multi_compile_instancing
 
-            #pragma vertex LitPassVertex
-            #pragma fragment LitPassFragment
+            #pragma vertex vert
+            #pragma fragment frag
 
             #include "URPSurfaceShader.hlsl"
             ENDHLSL
@@ -136,11 +136,10 @@ Shader "Universal Render Pipeline/Surface Shader"
             #pragma multi_compile_instancing
             #pragma shader_feature _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
 
-            #pragma vertex ShadowPassVertex
-            #pragma fragment ShadowPassFragment
+            #pragma vertex vert
+            #pragma fragment frag
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
+            #include "URPSurfaceShaderShadows.hlsl"
             ENDHLSL
         }
 

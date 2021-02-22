@@ -54,14 +54,14 @@ inline void dontUpdateVertex(inout VertexInput i)
 
 }
 
-inline SurfaceData GetDefaultSurfaceData(VertexOutput vertex)
+inline SurfaceData GetDefaultSurfaceData(VertexOutput input)
 {
 	SurfaceData surfaceOutput;
 	
-    half4 albedoAlpha = SampleAlbedoAlpha(vertex.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
+    half4 albedoAlpha = SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
     surfaceOutput.alpha = Alpha(albedoAlpha.a, _BaseColor, _Cutoff);
 
-    half4 specGloss = SampleMetallicSpecGloss(vertex.uv, albedoAlpha.a);
+    half4 specGloss = SampleMetallicSpecGloss(input.uv, albedoAlpha.a);
     surfaceOutput.albedo = albedoAlpha.rgb * _BaseColor.rgb;
 
 #if _SPECULAR_SETUP
@@ -73,9 +73,9 @@ inline SurfaceData GetDefaultSurfaceData(VertexOutput vertex)
 #endif
 
     surfaceOutput.smoothness = specGloss.a;
-    surfaceOutput.normalTS = SampleNormal(vertex.uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
-    surfaceOutput.occlusion = SampleOcclusion(vertex.uv);
-    surfaceOutput.emission = SampleEmission(vertex.uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
+    surfaceOutput.normalTS = SampleNormal(input.uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
+    surfaceOutput.occlusion = SampleOcclusion(input.uv);
+    surfaceOutput.emission = SampleEmission(input.uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
 	
 	return surfaceOutput;
 }
@@ -84,8 +84,7 @@ inline SurfaceData GetDefaultSurfaceData(VertexOutput vertex)
 //                  Vertex and Fragment functions                            //
 ///////////////////////////////////////////////////////////////////////////////
 
-// Used in Standard (Physically Based) shader
-VertexOutput LitPassVertex(VertexInput input)
+VertexOutput vert(VertexInput input)
 {
     VertexOutput output = (VertexOutput)0;
 
@@ -140,8 +139,7 @@ VertexOutput LitPassVertex(VertexInput input)
     return output;
 }
 
-// Used in Standard (Physically Based) shader
-half4 LitPassFragment(VertexOutput input) : SV_Target
+half4 frag(VertexOutput input) : SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
