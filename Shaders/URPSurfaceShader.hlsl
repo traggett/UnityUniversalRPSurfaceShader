@@ -154,6 +154,13 @@ VertexOutput vert(VertexInput input)
     output.shadowCoord = GetShadowCoord(vertexInput);
 #endif
 
+#if defined(REQUIRES_WORLD_REFL)
+	output.worldRefl = reflect(output.viewDirWS, output.normalWS);
+#endif
+#if defined(REQUIRES_SCREEN_POS)
+	output.screenPos = ComputeScreenPos(output.positionCS);
+#endif
+
     output.positionCS = vertexInput.positionCS;
 
     return output;
