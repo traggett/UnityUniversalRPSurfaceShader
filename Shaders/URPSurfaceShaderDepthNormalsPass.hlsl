@@ -18,7 +18,7 @@ Varyings DepthNormalsVertex(Attributes input)
     output.uv         = TRANSFORM_TEX(input.texcoord, _BaseMap);
     output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
 
-    VertexNormalInputs normalInput = GetVertexNormalInputs(input.normal, input.tangentOS);
+    VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
     output.normalWS = NormalizeNormalPerVertex(normalInput.normalWS);
 
     return output;
