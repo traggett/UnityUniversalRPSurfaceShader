@@ -90,6 +90,7 @@ struct Varyings
 {
     float2 uv           : TEXCOORD0;
     float4 positionCS   : SV_POSITION;
+	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
 /////////////////////////////////////////
