@@ -35,6 +35,9 @@ Varyings ShadowPassVertex(Attributes input)
 
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
     output.positionCS = GetShadowPositionHClip(input);
+	
+	UPDATE_OUTPUT_VERTEX(output);
+	
     return output;
 }
 

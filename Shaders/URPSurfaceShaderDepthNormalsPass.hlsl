@@ -20,6 +20,8 @@ Varyings DepthNormalsVertex(Attributes input)
 
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
     output.normalWS = NormalizeNormalPerVertex(normalInput.normalWS);
+	
+	UPDATE_OUTPUT_VERTEX(output);
 
     return output;
 }

@@ -37,4 +37,15 @@ inline void DontModifyInputVertex(inout Attributes i)
 
 #endif
 
+#ifndef UPDATE_OUTPUT_VERTEX 
+
+#define UPDATE_OUTPUT_VERTEX DontModifyOutputVertex
+
+inline void DontModifyOutputVertex(inout Varyings i)
+{
+
+}
+
+#endif
+
 #endif //URP_SURFACE_SHADER_MACROS_INCLUDED

@@ -17,6 +17,9 @@ Varyings DepthOnlyVertex(Attributes input)
 
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
     output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+	
+	UPDATE_OUTPUT_VERTEX(output);
+	
     return output;
 }
 

@@ -98,6 +98,8 @@ Varyings LitPassVertex(Attributes input)
 #endif
 
     output.positionCS = vertexInput.positionCS;
+	
+	UPDATE_OUTPUT_VERTEX(output);
 
     return output;
 }
