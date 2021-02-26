@@ -1,12 +1,6 @@
 #ifndef URP_SURFACE_SHADER_INPUTS_INCLUDED
 #define URP_SURFACE_SHADER_INPUTS_INCLUDED
 
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
-#if defined(FORWARD_PASS) || defined(GBUFFER_PASS)
-
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
-
 // GLES2 has limited amount of interpolators
 #if defined(_PARALLAXMAP) && !defined(SHADER_API_GLES)
 #define REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR
@@ -15,6 +9,12 @@
 #if (defined(_NORMALMAP) || (defined(_PARALLAXMAP) && !defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR))) || defined(_DETAIL)
 #define REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR
 #endif
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+#if defined(FORWARD_PASS) || defined(GBUFFER_PASS)
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 #endif
 
