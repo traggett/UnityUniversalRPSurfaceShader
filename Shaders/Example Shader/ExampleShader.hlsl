@@ -88,4 +88,19 @@ inline SurfaceData GetSurfaceProperties(Varyings input)
 
 #endif
 
+/////////////////////////////////////////////////////////
+// Use this to change the surfaces properties for shadows
+/////////////////////////////////////////////////////////
+
+#if defined(SHADOWS_PASS)
+
+#define UPDATE_SHADOW_SURFACE UpdateShadowSurfaceProperties
+
+inline void UpdateShadowSurfaceProperties(Varyings input)
+{
+	//Update input to alter the shadows if needed
+}
+
+#endif
+
 #endif // URP_EXAMPLE_SURFACE_SHADER_INCLUDED

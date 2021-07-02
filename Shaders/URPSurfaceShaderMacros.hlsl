@@ -22,6 +22,17 @@ inline SurfaceData GetDefaultSurfaceData(Varyings input)
 
 #endif
 
+#ifndef UPDATE_SHADOW_SURFACE
+
+#define UPDATE_SHADOW_SURFACE UpdateDefaultShadowSurfaceData
+
+inline void UpdateDefaultShadowSurfaceData(Varyings input)
+{
+
+}
+
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 //                  Vertex functions                           				 //
 ///////////////////////////////////////////////////////////////////////////////
