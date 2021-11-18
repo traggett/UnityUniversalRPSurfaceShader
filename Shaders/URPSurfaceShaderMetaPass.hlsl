@@ -12,7 +12,7 @@ Varyings UniversalVertexMeta(Attributes input)
 	UPDATE_INPUT_VERTEX(input);
 
     output.positionCS = MetaVertexPosition(input.positionOS, input.uv1, input.uv2, unity_LightmapST, unity_DynamicLightmapST);
-    output.uv = TRANSFORM_TEX(input.uv0, _BaseMap);
+    output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 	
 	UPDATE_OUTPUT_VERTEX(output);
 	
