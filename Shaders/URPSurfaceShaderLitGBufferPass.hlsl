@@ -11,35 +11,47 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 {
     inputData = (InputData)0;
 
-#if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
-    inputData.positionWS = input.positionWS;
-#endif
+    #if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
+        inputData.positionWS = input.positionWS;
+    #endif
 
-    half3 viewDirWS = SafeNormalize(input.viewDirWS);
-#if defined(_NORMALMAP) || defined(_DETAIL)
-    float sgn = input.tangentWS.w;      // should be either +1 or -1
-    float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
-    inputData.normalWS = TransformTangentToWorld(normalTS, half3x3(input.tangentWS.xyz, bitangent.xyz, input.normalWS.xyz));
-#else
-    inputData.normalWS = input.normalWS;
-#endif
+    inputData.positionCS = input.positionCS;
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
+    #if defined(_NORMALMAP) || defined(_DETAIL)
+        float sgn = input.tangentWS.w;      // should be either +1 or -1
+        float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
+        inputData.normalWS = TransformTangentToWorld(normalTS, half3x3(input.tangentWS.xyz, bitangent.xyz, input.normalWS.xyz));
+    #else
+        inputData.normalWS = input.normalWS;
+    #endif
 
     inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
     inputData.viewDirectionWS = viewDirWS;
 
-#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
-    inputData.shadowCoord = input.shadowCoord;
-#elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
-    inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
-#else
-    inputData.shadowCoord = float4(0, 0, 0, 0);
-#endif
+    #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+        inputData.shadowCoord = input.shadowCoord;
+    #elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
+        inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
+    #else
+        inputData.shadowCoord = float4(0, 0, 0, 0);
+    #endif
 
     inputData.fogCoord = 0.0; // we don't apply fog in the guffer pass
-    inputData.vertexLighting = input.vertexLighting.xyz;
-    inputData.bakedGI = SAMPLE_GI(input.lightmapUV, input.vertexSH, inputData.normalWS);
+
+    #ifdef _ADDITIONAL_LIGHTS_VERTEX
+        inputData.vertexLighting = input.vertexLighting.xyz;
+    #else
+        inputData.vertexLighting = half3(0, 0, 0);
+    #endif
+
+#if defined(DYNAMICLIGHTMAP_ON)
+    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.dynamicLightmapUV, input.vertexSH, inputData.normalWS);
+#else
+    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.vertexSH, inputData.normalWS);
+#endif
+
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
-    inputData.shadowMask = SAMPLE_SHADOWMASK(input.lightmapUV);
+    inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
 }
 
 
@@ -65,39 +77,44 @@ Varyings LitGBufferPassVertex(Attributes input)
     // also required for per-vertex lighting and SH evaluation
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
-    half3 viewDirWS = GetWorldSpaceViewDir(vertexInput.positionWS);
-    half3 vertexLight = VertexLighting(vertexInput.positionWS, normalInput.normalWS);
-
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 
     // already normalized from normal transform to WS.
     output.normalWS = normalInput.normalWS;
-    output.viewDirWS = viewDirWS;
-#if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR) || defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-    real sign = input.tangentOS.w * GetOddNegativeScale();
-    half4 tangentWS = half4(normalInput.tangentWS.xyz, sign);
-#endif
-#if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
-    output.tangentWS = tangentWS;
-#endif
 
-#if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-    half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, viewDirWS);
-    output.viewDirTS = viewDirTS;
-#endif
+    #if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR) || defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
+        real sign = input.tangentOS.w * GetOddNegativeScale();
+        half4 tangentWS = half4(normalInput.tangentWS.xyz, sign);
+    #endif
 
-    OUTPUT_LIGHTMAP_UV(input.lightmapUV, unity_LightmapST, output.lightmapUV);
+    #if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
+        output.tangentWS = tangentWS;
+    #endif
+
+    #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
+        half3 viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
+        half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, viewDirWS);
+        output.viewDirTS = viewDirTS;
+    #endif
+
+    OUTPUT_LIGHTMAP_UV(input.staticLightmapUV, unity_LightmapST, output.staticLightmapUV);
+#ifdef DYNAMICLIGHTMAP_ON
+    output.dynamicLightmapUV = input.dynamicLightmapUV.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
+#endif
     OUTPUT_SH(output.normalWS.xyz, output.vertexSH);
 
-    output.vertexLighting = vertexLight;
+    #ifdef _ADDITIONAL_LIGHTS_VERTEX
+        half3 vertexLight = VertexLighting(vertexInput.positionWS, normalInput.normalWS);
+        output.vertexLighting = vertexLight;
+    #endif
 
-#if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
-    output.positionWS = vertexInput.positionWS;
-#endif
+    #if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
+        output.positionWS = vertexInput.positionWS;
+    #endif
 
-#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
-    output.shadowCoord = GetShadowCoord(vertexInput);
-#endif
+    #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+        output.shadowCoord = GetShadowCoord(vertexInput);
+    #endif
 
     output.positionCS = vertexInput.positionCS;
 	
@@ -106,6 +123,8 @@ Varyings LitGBufferPassVertex(Attributes input)
     return output;
 }
 
+
+	
 // Used in Standard (Physically Based) shader
 FragmentOutput LitGBufferPassFragment(Varyings input)
 {
@@ -122,26 +141,27 @@ FragmentOutput LitGBufferPassFragment(Varyings input)
 #endif
 
     SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
-	
+
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);
+    SETUP_DEBUG_TEXTURE_DATA(inputData, input.uv, _BaseMap);
+
+#ifdef _DBUFFER
+    ApplyDecalToSurfaceData(input.positionCS, surfaceData, inputData);
+#endif
 
     // Stripped down version of UniversalFragmentPBR().
-
-#ifdef _SPECULARHIGHLIGHTS_OFF
-    bool specularHighlightsOff = true;
-#else
-    bool specularHighlightsOff = false;
-#endif
 
     // in LitForwardPass GlobalIllumination (and temporarily LightingPhysicallyBased) are called inside UniversalFragmentPBR
     // in Deferred rendering we store the sum of these values (and of emission as well) in the GBuffer
     BRDFData brdfData;
     InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.alpha, brdfData);
 
-    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, surfaceData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    Light mainLight = GetMainLight(inputData.shadowCoord, inputData.positionWS, inputData.shadowMask);
+    MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, inputData.shadowMask);
+    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, surfaceData.occlusion, inputData.positionWS, inputData.normalWS, inputData.viewDirectionWS);
 
-    return BRDFDataToGbuffer(brdfData, inputData, surfaceData.smoothness, surfaceData.emission + color);
+    return BRDFDataToGbuffer(brdfData, inputData, surfaceData.smoothness, surfaceData.emission + color, surfaceData.occlusion);
 }
 
 #endif

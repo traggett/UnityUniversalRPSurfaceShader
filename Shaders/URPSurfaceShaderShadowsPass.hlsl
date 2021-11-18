@@ -13,12 +13,18 @@ float4 GetShadowPositionHClip(Attributes input)
     float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
     float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
 
-    float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
+#if _CASTING_PUNCTUAL_LIGHT_SHADOW
+    float3 lightDirectionWS = normalize(_LightPosition - positionWS);
+#else
+    float3 lightDirectionWS = _LightDirection;
+#endif
+
+    float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDirectionWS));
 
 #if UNITY_REVERSED_Z
-    positionCS.z = min(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
+    positionCS.z = min(positionCS.z, UNITY_NEAR_CLIP_VALUE);
 #else
-    positionCS.z = max(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
+    positionCS.z = max(positionCS.z, UNITY_NEAR_CLIP_VALUE);
 #endif
 
     return positionCS;
@@ -35,7 +41,7 @@ Varyings ShadowPassVertex(Attributes input)
 
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
     output.positionCS = GetShadowPositionHClip(input);
-	
+    
 	UPDATE_OUTPUT_VERTEX(output);
 	
     return output;

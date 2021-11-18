@@ -3,9 +3,7 @@
 
 #include "URPSurfaceShaderInputs.hlsl"
 #include "URPSurfaceShaderMacros.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
-
 
 Varyings UniversalVertexMeta(Attributes input)
 {
@@ -30,22 +28,14 @@ half4 UniversalFragmentMeta(Varyings input) : SV_Target
 
     MetaInput metaInput;
     metaInput.Albedo = brdfData.diffuse + brdfData.specular * brdfData.roughness * 0.5;
-    metaInput.SpecularColor = surfaceData.specular;
     metaInput.Emission = surfaceData.emission;
-
-    return MetaFragment(metaInput);
-}
-
-
-//LWRP -> Universal Backwards Compatibility
-Varyings LightweightVertexMeta(Attributes input)
-{
-    return UniversalVertexMeta(input);
-}
-
-half4 LightweightFragmentMeta(Varyings input) : SV_Target
-{
-    return UniversalFragmentMeta(input);
+	
+#ifdef EDITOR_VISUALIZATION
+    metaInput.VizUV = fragIn.VizUV;
+    metaInput.LightCoord = fragIn.LightCoord;
+#endif
+	
+	return UnityMetaFragment(metaInput);
 }
 
 #endif
