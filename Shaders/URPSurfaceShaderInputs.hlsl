@@ -216,6 +216,25 @@ struct Varyings
     float2 uv           : TEXCOORD0;
 };
 
+/////////////////////////////////////////
+// 2D
+/////////////////////////////////////////
+
+#elif defined(UNIVERSAL_2D_PASS)
+
+struct Attributes
+{
+    float4 positionOS       : POSITION;
+    float2 texcoord         : TEXCOORD0;
+	float3 normalOS     	: NORMAL;
+};
+
+struct Varyings
+{
+	float4 positionCS 	: SV_POSITION;
+    float2 uv        	: TEXCOORD0;
+};
+
 #endif
 
 #endif //URP_SURFACE_SHADER_INPUTS_INCLUDED

@@ -375,8 +375,9 @@ Shader "Universal Render Pipeline/Surface Shader"
             #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma shader_feature_local_fragment _ALPHAPREMULTIPLY_ON
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/Utils/Universal2D.hlsl"
+			#define UNIVERSAL_2D_PASS
+
+            #include "URPSurfaceShader2DPass.hlsl"
             ENDHLSL
         }
     }
@@ -611,9 +612,10 @@ Shader "Universal Render Pipeline/Surface Shader"
             #pragma fragment frag
             #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma shader_feature_local_fragment _ALPHAPREMULTIPLY_ON
+			
+			#define UNIVERSAL_2D_PASS
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/Utils/Universal2D.hlsl"
+            #include "URPSurfaceShader2DPass.hlsl"
             ENDHLSL
         }
     }
