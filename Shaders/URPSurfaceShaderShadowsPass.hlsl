@@ -41,6 +41,7 @@ Varyings ShadowPassVertex(Attributes input)
 	UPDATE_INPUT_VERTEX(input);
 	
 	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_TRANSFER_INSTANCE_ID(input, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
@@ -53,7 +54,8 @@ Varyings ShadowPassVertex(Attributes input)
 
 half4 ShadowPassFragment(Varyings input) : SV_TARGET
 {
-	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 	
 	UPDATE_SHADOW_SURFACE(input);
 	
