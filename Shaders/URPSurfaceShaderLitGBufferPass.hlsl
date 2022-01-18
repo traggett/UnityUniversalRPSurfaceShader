@@ -116,6 +116,10 @@ Varyings LitGBufferPassVertex(Attributes input)
         output.shadowCoord = GetShadowCoord(vertexInput);
     #endif
 
+	#if defined(REQUIRES_VERTEX_COLOR)
+		output.color = input.color;
+	#endif
+
     output.positionCS = vertexInput.positionCS;
 	
 	UPDATE_OUTPUT_VERTEX(output);

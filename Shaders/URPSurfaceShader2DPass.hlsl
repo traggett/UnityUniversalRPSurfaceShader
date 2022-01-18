@@ -15,6 +15,10 @@ Varyings vert(Attributes input)
     output.positionCS = vertexInput.positionCS;
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 
+#if defined(REQUIRES_VERTEX_COLOR)
+	output.color = input.color;
+#endif
+
 	UPDATE_OUTPUT_VERTEX(output);
 
     return output;
@@ -31,6 +35,7 @@ half4 frag(Varyings input) : SV_Target
 #ifdef _ALPHAPREMULTIPLY_ON
     color *= alpha;
 #endif
+
     return half4(color, alpha);
 }
 

@@ -29,6 +29,7 @@ struct Attributes
     float4 positionOS   : POSITION;
     float3 normalOS     : NORMAL;
     float4 tangentOS    : TANGENT;
+	float4 color		: COLOR;
     float2 texcoord     : TEXCOORD0;
     float2 staticLightmapUV   : TEXCOORD1;
     float2 dynamicLightmapUV  : TEXCOORD2;
@@ -66,6 +67,10 @@ struct Varyings
     DECLARE_LIGHTMAP_OR_SH(staticLightmapUV, vertexSH, 8);
 #ifdef DYNAMICLIGHTMAP_ON
     float2  dynamicLightmapUV : TEXCOORD9; // Dynamic lightmap UVs
+#endif
+
+#if defined(REQUIRES_VERTEX_COLOR)
+    float3 color               		: COLOR;
 #endif
 
     float4 positionCS               : SV_POSITION;
@@ -106,6 +111,7 @@ struct Attributes
     float4 positionOS   : POSITION;
     float3 normalOS     : NORMAL;
     float4 tangentOS    : TANGENT;
+	float4 color		: COLOR;
     float2 texcoord     : TEXCOORD0;
     float2 staticLightmapUV   : TEXCOORD1;
     float2 dynamicLightmapUV  : TEXCOORD2;
@@ -139,6 +145,10 @@ struct Varyings
     DECLARE_LIGHTMAP_OR_SH(staticLightmapUV, vertexSH, 7);
 #ifdef DYNAMICLIGHTMAP_ON
     float2  dynamicLightmapUV       : TEXCOORD8; // Dynamic lightmap UVs
+#endif
+
+#if defined(REQUIRES_VERTEX_COLOR)
+    float3 color               		: COLOR;
 #endif
 
     float4 positionCS               : SV_POSITION;
@@ -229,12 +239,17 @@ struct Attributes
     float4 positionOS       : POSITION;
     float2 texcoord         : TEXCOORD0;
 	float3 normalOS     	: NORMAL;
+	float4 color			: COLOR;
 };
 
 struct Varyings
 {
 	float4 positionCS 	: SV_POSITION;
     float2 uv        	: TEXCOORD0;
+	
+#if defined(REQUIRES_VERTEX_COLOR)
+    float3 color        : COLOR;
+#endif
 };
 
 #endif
