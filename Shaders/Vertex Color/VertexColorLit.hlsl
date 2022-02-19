@@ -18,7 +18,7 @@ inline SurfaceData GetSurfaceProperties(Varyings input)
 	float2 uv = input.uv;
 	
 	half4 albedoAlpha = SampleAlbedoAlpha(uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
-    outSurfaceData.alpha = Alpha(albedoAlpha.a * input.color.a, _BaseColor, _Cutoff);
+    outSurfaceData.alpha = Alpha(albedoAlpha.a, _BaseColor * input.color, _Cutoff);
 
     half4 specGloss = SampleMetallicSpecGloss(uv, albedoAlpha.a);
     outSurfaceData.albedo = albedoAlpha.rgb * input.color.rgb * _BaseColor.rgb;
