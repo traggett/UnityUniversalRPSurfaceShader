@@ -70,7 +70,7 @@ struct Varyings
 #endif
 
 #if defined(REQUIRES_VERTEX_COLOR)
-    float3 color               		: COLOR;
+    float4 color               		: COLOR;
 #endif
 
     float4 positionCS               : SV_POSITION;
@@ -148,7 +148,7 @@ struct Varyings
 #endif
 
 #if defined(REQUIRES_VERTEX_COLOR)
-    float3 color               		: COLOR;
+    float4 color               		: COLOR;
 #endif
 
     float4 positionCS               : SV_POSITION;
@@ -248,7 +248,7 @@ struct Varyings
     float2 uv        	: TEXCOORD0;
 	
 #if defined(REQUIRES_VERTEX_COLOR)
-    float3 color        : COLOR;
+    float4 color        : COLOR;
 #endif
 };
 
