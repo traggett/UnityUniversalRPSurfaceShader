@@ -148,7 +148,7 @@
 			#define FORWARD_PASS
 
 			#include "VertexColorLit.hlsl"
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderLightingPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderLightingPass.hlsl"
             ENDHLSL
         }
 
@@ -184,7 +184,7 @@
 			#define SHADOWS_PASS
 
 			#include "VertexColorLit.hlsl"
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderShadowsPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderShadowsPass.hlsl"
             ENDHLSL
         }
 
@@ -250,7 +250,7 @@
 			#define GBUFFER_PASS
 
 			#include "VertexColorLit.hlsl"
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderLitGBufferPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderLitGBufferPass.hlsl"
             ENDHLSL
         }
 
@@ -287,7 +287,7 @@
 			#define DEPTH_ONLY_PASS
 
 			#include "VertexColorLit.hlsl"
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderDepthOnlyPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderDepthOnlyPass.hlsl"
             ENDHLSL
         }
 
@@ -325,7 +325,7 @@
 			#define DEPTH_NORMALS_PASS
 
 			#include "VertexColorLit.hlsl"
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderDepthNormalsPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderDepthNormalsPass.hlsl"
             ENDHLSL
         }
     }
@@ -403,7 +403,7 @@
 			#define FORWARD_PASS
 
 			#include "VertexColorLit.hlsl"
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderLightingPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderLightingPass.hlsl"
             ENDHLSL
         }
 
@@ -440,7 +440,7 @@
 			#define SHADOWS_PASS
 
 			#include "VertexColorLit.hlsl"
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderShadowsPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderShadowsPass.hlsl"
             ENDHLSL
         }
 
@@ -476,7 +476,7 @@
 			#define DEPTH_ONLY_PASS
 
 			#include "VertexColorLit.hlsl"
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderDepthOnlyPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderDepthOnlyPass.hlsl"
             ENDHLSL
         }
 
@@ -513,7 +513,7 @@
 			#define DEPTH_NORMALS_PASS
 
 			#include "VertexColorLit.hlsl"
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderDepthNormalsPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderDepthNormalsPass.hlsl"
             ENDHLSL
         }
     }

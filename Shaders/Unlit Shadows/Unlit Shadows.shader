@@ -94,7 +94,7 @@ Shader "Unlit Shadows"
 			
 			#define SHADOWS_PASS
 			
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderShadowsPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderShadowsPass.hlsl"
             ENDHLSL
         }
 
@@ -249,7 +249,7 @@ Shader "Unlit Shadows"
 			
 			#define SHADOWS_PASS
 			
-			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderShadowsPass.hlsl"
+			#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/Includes/URPSurfaceShaderShadowsPass.hlsl"
             ENDHLSL
         }
 		

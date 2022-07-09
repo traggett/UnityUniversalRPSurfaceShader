@@ -147,7 +147,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
 			#define FORWARD_PASS
 
-            #include "URPSurfaceShaderLightingPass.hlsl"
+            #include "Includes/URPSurfaceShaderLightingPass.hlsl"
             ENDHLSL
         }
 
@@ -186,7 +186,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 			
 			#define SHADOWS_PASS
 
-			#include "URPSurfaceShaderShadowsPass.hlsl"
+			#include "Includes/URPSurfaceShaderShadowsPass.hlsl"
             ENDHLSL
         }
 
@@ -495,7 +495,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
 			#define SHADOWS_PASS
 
-			#include "URPSurfaceShaderShadowsPass.hlsl"
+			#include "Includes/URPSurfaceShaderShadowsPass.hlsl"
             ENDHLSL
         }
 
