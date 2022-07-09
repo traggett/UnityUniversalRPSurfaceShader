@@ -5,7 +5,7 @@
 // Include this at the start of your file
 /////////////////////////////////////////
 
-#include "Assets/ThirdParty/UnityUniversalRPSurfaceShader/Shaders/URPSurfaceShaderInputs.hlsl"
+#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderInputs.hlsl"
 
 ////////////////////////////////////////////
 // Use this define to modify an input vertex 

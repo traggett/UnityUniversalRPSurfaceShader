@@ -254,7 +254,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
             #define GBUFFER_PASS
 
-			#include "URPSurfaceShaderLitGBufferPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderLitGBufferPass.hlsl"
             ENDHLSL
         }
 
@@ -286,7 +286,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
             #define DEPTH_ONLY_PASS
 
-			#include "URPSurfaceShaderDepthOnlyPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderDepthOnlyPass.hlsl"
             ENDHLSL
         }
 
@@ -321,7 +321,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
             #define DEPTH_NORMALS_PASS
 
-			#include "URPSurfaceShaderDepthNormalsPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderDepthNormalsPass.hlsl"
             ENDHLSL
         }
 
@@ -352,7 +352,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
             #define META_PASS
 
-			#include "URPSurfaceShaderMetaPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderMetaPass.hlsl"
 
             ENDHLSL
         }
@@ -377,7 +377,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
 			#define UNIVERSAL_2D_PASS
 
-            #include "URPSurfaceShader2DPass.hlsl"
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShader2DPass.hlsl"
             ENDHLSL
         }
     }
@@ -457,7 +457,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
             #define FORWARD_PASS
 
-			#include "URPSurfaceShaderLightingPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderLightingPass.hlsl"
             ENDHLSL
         }
 
@@ -526,7 +526,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
             #define DEPTH_ONLY_PASS
 
-			#include "URPSurfaceShaderDepthOnlyPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderDepthOnlyPass.hlsl"
             ENDHLSL
         }
 
@@ -560,7 +560,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
             #define DEPTH_NORMALS_PASS
 
-			#include "URPSurfaceShaderDepthNormalsPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderDepthNormalsPass.hlsl"
             ENDHLSL
         }
 
@@ -591,7 +591,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
             #define META_PASS
 
-			#include "URPSurfaceShaderMetaPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderMetaPass.hlsl"
 			
             ENDHLSL
         }
@@ -615,7 +615,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 			
 			#define UNIVERSAL_2D_PASS
 
-            #include "URPSurfaceShader2DPass.hlsl"
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShader2DPass.hlsl"
             ENDHLSL
         }
     }
