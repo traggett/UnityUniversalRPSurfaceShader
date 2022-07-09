@@ -147,7 +147,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
 			#define FORWARD_PASS
 
-            #include "Includes/URPSurfaceShaderLightingPass.hlsl"
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderLightingPass.hlsl"
             ENDHLSL
         }
 
@@ -186,7 +186,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 			
 			#define SHADOWS_PASS
 
-			#include "Includes/URPSurfaceShaderShadowsPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderShadowsPass.hlsl"
             ENDHLSL
         }
 
@@ -495,7 +495,7 @@ Shader "Universal Render Pipeline/Surface Shader"
 
 			#define SHADOWS_PASS
 
-			#include "Includes/URPSurfaceShaderShadowsPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderShadowsPass.hlsl"
             ENDHLSL
         }
 

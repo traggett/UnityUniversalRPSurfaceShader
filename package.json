@@ -1,0 +1,12 @@
+{
+  "name": "com.clarky.urpsurfaceshader",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "com.unity.render-pipelines.universal": "12.1.7"
+  },
+  "displayName": "Unity URP Surface Shader Extensions",
+  "description": "A set of macro based shaders that allow easier customisation of the standard URP surface shader.",
+  "unity": "2020.1",
+  "author": "Clarky Cat (https://github.com/traggett)"
+}
