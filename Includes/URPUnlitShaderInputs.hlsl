@@ -92,6 +92,7 @@ struct Attributes
 {
     float3 normalOS      : NORMAL;
     float4 positionOS   : POSITION;
+	float2 texcoord     : TEXCOORD0;
     float4 tangentOS    : TANGENT;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
