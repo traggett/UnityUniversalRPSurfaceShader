@@ -13,10 +13,10 @@
 struct Attributes
 {
     float4 positionOS : POSITION;
-    float2 uv : TEXCOORD0;
-
-    #if defined(DEBUG_DISPLAY)
-    float3 normalOS : NORMAL;
+    float2 texcoord : TEXCOORD0;
+	float3 normalOS : NORMAL;
+	
+    #if defined(DEBUG_DISPLAY)  
     float4 tangentOS : TANGENT;
     #endif
 

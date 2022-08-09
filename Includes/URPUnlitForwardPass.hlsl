@@ -42,7 +42,7 @@ Varyings UnlitPassVertex(Attributes input)
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 
     output.positionCS = vertexInput.positionCS;
-    output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
+    output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
     #if defined(_FOG_FRAGMENT)
     output.fogCoord = vertexInput.positionVS.z;
     #else
