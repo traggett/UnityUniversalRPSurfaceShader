@@ -30,7 +30,17 @@ Varyings UniversalVertexMeta(Attributes input)
 half4 UniversalFragmentMetaUnlit(Varyings input) : SV_Target
 {
     MetaInput metaInput = (MetaInput)0;
-    metaInput.Albedo = _BaseColor.rgb * SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb;
+	
+	////////////////////////////////
+	half3 color;
+	float alpha;
+	GET_UNLIT_SURFACE_PROPERTIES(input, color, alpha);
+	////////////////////////////////
+	
+	AlphaDiscard(alpha, _Cutoff);
+    color = AlphaModulate(color, alpha);
+	
+    metaInput.Albedo = color;
 	
 #ifdef EDITOR_VISUALIZATION
     metaInput.VizUV = fragIn.VizUV;
