@@ -6,6 +6,27 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Unlit.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
+void InitializeInputData(Varyings input, out InputData inputData)
+{
+    inputData = (InputData)0;
+
+    #if defined(DEBUG_DISPLAY)
+    inputData.positionWS = input.positionWS;
+    inputData.normalWS = input.normalWS;
+    inputData.viewDirectionWS = input.viewDirWS;
+    #else
+    inputData.positionWS = float3(0, 0, 0);
+    inputData.normalWS = half3(0, 0, 1);
+    inputData.viewDirectionWS = half3(0, 0, 1);
+    #endif
+    inputData.shadowCoord = 0;
+    inputData.fogCoord = 0;
+    inputData.vertexLighting = half3(0, 0, 0);
+    inputData.bakedGI = half3(0, 0, 0);
+    inputData.normalizedScreenSpaceUV = 0;
+    inputData.shadowMask = half4(1, 1, 1, 1);
+}
+
 Varyings UnlitPassVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
@@ -56,19 +77,19 @@ half4 UnlitPassFragment(Varyings input) : SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-
-    half2 uv = input.uv;
-    half4 texColor = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);
-    half3 color = texColor.rgb * _BaseColor.rgb;
-    half alpha = texColor.a * _BaseColor.a;
+	
+	half3 color;
+	float alpha;
+	
+	////////////////////////////////
+	GET_UNLIT_SURFACE_PROPERTIES(input, color, alpha);
+	////////////////////////////////
 
     AlphaDiscard(alpha, _Cutoff);
     color = AlphaModulate(color, alpha);
 	
-	////////////////////////////////
-	InputData inputData = GET_UNLIT_SURFACE_PROPERTIES(input);
-	////////////////////////////////
-	
+	InputData inputData;
+    InitializeInputData(input, inputData);
     SETUP_DEBUG_TEXTURE_DATA(inputData, input.uv, _BaseMap);
 
 #ifdef _DBUFFER

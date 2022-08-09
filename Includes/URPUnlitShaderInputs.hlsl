@@ -1,17 +1,8 @@
 #ifndef URP_SURFACE_SHADER_UNLIT_INPUT_INCLUDED
 #define URP_SURFACE_SHADER_UNLIT_INPUT_INCLUDED
 
-// GLES2 has limited amount of interpolators
-#if defined(_PARALLAXMAP) && !defined(SHADER_API_GLES)
-#define REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR
-#endif
-
-#if (defined(_NORMALMAP) || (defined(_PARALLAXMAP) && !defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR))) || defined(_DETAIL)
-#define REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR
-#endif
-
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
+#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 
 /////////////////////////////////////////
 // Forward Lighting
@@ -99,7 +90,7 @@ struct Varyings
 
 struct Attributes
 {
-    float3 normal       : NORMAL;
+    float3 normalOS      : NORMAL;
     float4 positionOS   : POSITION;
     float4 tangentOS    : TANGENT;
     UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -126,9 +117,9 @@ struct Attributes
 {
     float4 positionOS   : POSITION;
     float3 normalOS     : NORMAL;
-    float2 uv0          : TEXCOORD0;
-    float2 uv1          : TEXCOORD1;
-    float2 uv2          : TEXCOORD2;
+    float2 texcoord     : TEXCOORD0;
+    float2 texcoord2    : TEXCOORD1;
+    float2 texcoord3    : TEXCOORD2;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 

@@ -33,29 +33,13 @@ inline void UpdateDefaultShadowSurfaceData(Varyings input)
 
 #ifndef GET_UNLIT_SURFACE_PROPERTIES 
 
-#define GET_UNLIT_SURFACE_PROPERTIES GetDefaultInputData
+#define GET_UNLIT_SURFACE_PROPERTIES GetDefaultUnlitSurfaceData
 
-inline InputData GetDefaultInputData(Varyings input)
+inline void GetDefaultUnlitSurfaceData(Varyings input, out half3 color, out float alpha)
 {
-	InputData inputData = (InputData)0;
-	
-#if defined(DEBUG_DISPLAY)
-    inputData.positionWS = input.positionWS;
-    inputData.normalWS = input.normalWS;
-    inputData.viewDirectionWS = input.viewDirWS;
-#else
-    inputData.positionWS = float3(0, 0, 0);
-    inputData.normalWS = half3(0, 0, 1);
-    inputData.viewDirectionWS = half3(0, 0, 1);
-#endif
-    inputData.shadowCoord = 0;
-    inputData.fogCoord = 0;
-    inputData.vertexLighting = half3(0, 0, 0);
-    inputData.bakedGI = half3(0, 0, 0);
-    inputData.normalizedScreenSpaceUV = 0;
-    inputData.shadowMask = half4(1, 1, 1, 1);
-	
-	return inputData;
+	half4 texColor = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
+    color = texColor.rgb * _BaseColor.rgb;
+    alpha = texColor.a * _BaseColor.a;
 }
 
 #endif
