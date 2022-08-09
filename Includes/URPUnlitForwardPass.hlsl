@@ -78,10 +78,9 @@ half4 UnlitPassFragment(Varyings input) : SV_Target
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 	
+	////////////////////////////////
 	half3 color;
 	float alpha;
-	
-	////////////////////////////////
 	GET_UNLIT_SURFACE_PROPERTIES(input, color, alpha);
 	////////////////////////////////
 
