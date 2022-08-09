@@ -239,7 +239,8 @@ struct Varyings
 struct Attributes
 {
     float4 positionOS       : POSITION;
-    float2 uv               : TEXCOORD0;
+	float3 normalOS     	: NORMAL;
+    float2 texcoord         : TEXCOORD0;
 };
 
 struct Varyings

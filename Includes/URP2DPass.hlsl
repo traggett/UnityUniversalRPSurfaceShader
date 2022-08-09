@@ -15,7 +15,7 @@ Varyings vert(Attributes input)
 	
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
     output.vertex = vertexInput.positionCS;
-    output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
+    output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 
 #if defined(REQUIRES_VERTEX_COLOR)
 	//output.color = input.color;
