@@ -13,11 +13,11 @@ Varyings UniversalVertexMeta(Attributes input)
 	UPDATE_INPUT_VERTEX(input);
 	////////////////////////////////
 
-    output.positionCS = UnityMetaVertexPosition(input.positionOS.xyz, input.uv1, input.uv2);
-    output.uv = TRANSFORM_TEX(input.uv0, _BaseMap);
+    output.positionCS = UnityMetaVertexPosition(input.positionOS.xyz, input.texcoord2, input.texcoord3);
+    output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 	
 #ifdef EDITOR_VISUALIZATION
-    UnityEditorVizData(input.positionOS.xyz, input.uv0, input.uv1, input.uv2, output.VizUV, output.LightCoord);
+    UnityEditorVizData(input.positionOS.xyz, input.texcoord, input.texcoord2, input.texcoord3, output.VizUV, output.LightCoord);
 #endif
 	
 	////////////////////////////////

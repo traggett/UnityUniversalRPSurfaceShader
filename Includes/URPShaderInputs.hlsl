@@ -167,6 +167,7 @@ struct Attributes
 {
     float4 positionOS     : POSITION;
     float2 texcoord     : TEXCOORD0;
+	float3 normalOS       : NORMAL;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -213,9 +214,9 @@ struct Attributes
 {
     float4 positionOS   : POSITION;
     float3 normalOS     : NORMAL;
-    float2 uv0          : TEXCOORD0;
-    float2 uv1          : TEXCOORD1;
-    float2 uv2          : TEXCOORD2;
+    float2 texcoord     : TEXCOORD0;
+    float2 texcoord2    : TEXCOORD1;
+    float2 texcoord3    : TEXCOORD2;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
