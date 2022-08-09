@@ -1,23 +1,37 @@
-#ifndef URP_SURFACE_SHADER_MACROS_INCLUDED
-#define URP_SURFACE_SHADER_MACROS_INCLUDED
+#ifndef URP_SURFACE_SHADER_UNLIT_MACROS_INCLUDED
+#define URP_SURFACE_SHADER_UNLIT_MACROS_INCLUDED
 
-#include "URPSurfaceShaderInputs.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
-
+#include "URPUnlitInput.hlsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 //                  Surface Functions			                             //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef GET_SURFACE_PROPERTIES 
+#ifndef GET_UNLIT_SURFACE_PROPERTIES 
 
-#define GET_SURFACE_PROPERTIES GetDefaultSurfaceData
+#define GET_UNLIT_SURFACE_PROPERTIES GetDefaultInputData
 
-inline SurfaceData GetDefaultSurfaceData(Varyings input)
+inline InputData GetDefaultInputData(Varyings input)
 {
-	SurfaceData surfaceOutput;	
-	InitializeStandardLitSurfaceData(input.uv, surfaceOutput);
-	return surfaceOutput;
+	InputData inputData = (InputData)0;
+	
+#if defined(DEBUG_DISPLAY)
+    inputData.positionWS = input.positionWS;
+    inputData.normalWS = input.normalWS;
+    inputData.viewDirectionWS = input.viewDirWS;
+#else
+    inputData.positionWS = float3(0, 0, 0);
+    inputData.normalWS = half3(0, 0, 1);
+    inputData.viewDirectionWS = half3(0, 0, 1);
+#endif
+    inputData.shadowCoord = 0;
+    inputData.fogCoord = 0;
+    inputData.vertexLighting = half3(0, 0, 0);
+    inputData.bakedGI = half3(0, 0, 0);
+    inputData.normalizedScreenSpaceUV = 0;
+    inputData.shadowMask = half4(1, 1, 1, 1);
+	
+	return inputData;
 }
 
 #endif

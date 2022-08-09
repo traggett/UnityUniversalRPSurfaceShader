@@ -1,8 +1,8 @@
-#ifndef UNIVERSAL_LIT_GBUFFER_PASS_INCLUDED
-#define UNIVERSAL_LIT_GBUFFER_PASS_INCLUDED
+#ifndef URP_SURFACE_SHADER_GBUFFER_PASS_INCLUDED
+#define URP_SURFACE_SHADER_GBUFFER_PASS_INCLUDED
 
-#include "URPSurfaceShaderInputs.hlsl"
-#include "URPSurfaceShaderMacros.hlsl"
+#include "URPShaderInputs.hlsl"
+#include "URPMacros.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
@@ -16,7 +16,6 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     #endif
 
     inputData.positionCS = input.positionCS;
-	
     #if defined(_NORMALMAP) || defined(_DETAIL)
         float sgn = input.tangentWS.w;      // should be either +1 or -1
         float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
@@ -54,7 +53,6 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 //                  Vertex and Fragment functions                            //
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,8 +62,10 @@ Varyings LitGBufferPassVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
 	
+	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
-	
+	////////////////////////////////
+
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
@@ -90,7 +90,7 @@ Varyings LitGBufferPassVertex(Attributes input)
     #if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
         output.tangentWS = tangentWS;
     #endif
-
+	
 	output.viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
 
     #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
@@ -117,19 +117,19 @@ Varyings LitGBufferPassVertex(Attributes input)
         output.shadowCoord = GetShadowCoord(vertexInput);
     #endif
 
-	#if defined(REQUIRES_VERTEX_COLOR)
-		output.color = input.color;
-	#endif
-
     output.positionCS = vertexInput.positionCS;
-	
-	UPDATE_OUTPUT_VERTEX(output);
 
+#if defined(REQUIRES_VERTEX_COLOR)
+    output.color = input.color;
+#endif
+	
+	////////////////////////////////
+	UPDATE_OUTPUT_VERTEX(output);
+	////////////////////////////////
+	
     return output;
 }
 
-
-	
 // Used in Standard (Physically Based) shader
 FragmentOutput LitGBufferPassFragment(Varyings input)
 {
@@ -145,7 +145,9 @@ FragmentOutput LitGBufferPassFragment(Varyings input)
     ApplyPerPixelDisplacement(viewDirTS, input.uv);
 #endif
 
+	////////////////////////////////
     SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
+	////////////////////////////////
 
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);

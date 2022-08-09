@@ -51,7 +51,10 @@ Shader "Universal Render Pipeline/Example Surface Shader"
         [ToggleUI] _AlphaClip("__clip", Float) = 0.0
         [HideInInspector] _SrcBlend("__src", Float) = 1.0
         [HideInInspector] _DstBlend("__dst", Float) = 0.0
+        [HideInInspector] _SrcBlendAlpha("__srcA", Float) = 1.0
+        [HideInInspector] _DstBlendAlpha("__dstA", Float) = 0.0
         [HideInInspector] _ZWrite("__zw", Float) = 1.0
+        [HideInInspector] _BlendModePreserveSpecular("_BlendModePreserveSpecular", Float) = 1.0
 
         [ToggleUI] _ReceiveShadows("Receive Shadows", Float) = 1.0
         // Editmode props
@@ -71,7 +74,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
 
     SubShader
     {
-       // Universal Pipeline tag is required. If Universal render pipeline is not set in the graphics settings
+        // Universal Pipeline tag is required. If Universal render pipeline is not set in the graphics settings
         // this Subshader will fail. One can add a subshader below or fallback to Standard built-in to make this
         // material work with both Universal Render Pipeline and Builtin Unity Pipeline
         Tags{"RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline" "UniversalMaterialType" = "Lit" "IgnoreProjector" = "True" "ShaderModel"="4.5"}
@@ -86,7 +89,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             Name "ForwardLit"
             Tags{"LightMode" = "UniversalForward"}
 
-            Blend[_SrcBlend][_DstBlend]
+            Blend[_SrcBlend][_DstBlend], [_SrcBlendAlpha][_DstBlendAlpha]
             ZWrite[_ZWrite]
             Cull[_Cull]
 
@@ -102,7 +105,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma shader_feature_local _ _DETAIL_MULX2 _DETAIL_SCALED
             #pragma shader_feature_local_fragment _SURFACE_TYPE_TRANSPARENT
             #pragma shader_feature_local_fragment _ALPHATEST_ON
-            #pragma shader_feature_local_fragment _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature_local_fragment _ _ALPHAPREMULTIPLY_ON _ALPHAMODULATE_ON
             #pragma shader_feature_local_fragment _EMISSION
             #pragma shader_feature_local_fragment _METALLICSPECGLOSSMAP
             #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
@@ -145,9 +148,9 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma fragment LitPassFragment
 
 			#define FORWARD_PASS
-
-            #include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderLightingPass.hlsl"
+			
+			#include "ExampleShader.hlsl"
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPLightingPass.hlsl"
             ENDHLSL
         }
 
@@ -181,13 +184,13 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             // This is used during shadow map generation to differentiate between directional and punctual light shadows, as they use different formulas to apply Normal Bias
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
 
-			#pragma vertex ShadowPassVertex
+            #pragma vertex ShadowPassVertex
             #pragma fragment ShadowPassFragment
-			
-			#define SHADOWS_PASS
+
+            #define SHADOWS_PASS
 
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderShadowsPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPShadowsPass.hlsl"
             ENDHLSL
         }
 
@@ -254,9 +257,9 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma fragment LitGBufferPassFragment
 
             #define GBUFFER_PASS
-
+			
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderLitGBufferPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPLitGBufferPass.hlsl"
             ENDHLSL
         }
 
@@ -266,7 +269,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             Tags{"LightMode" = "DepthOnly"}
 
             ZWrite On
-            ColorMask 0
+            ColorMask R
             Cull[_Cull]
 
             HLSLPROGRAM
@@ -289,7 +292,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #define DEPTH_ONLY_PASS
 
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderDepthOnlyPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPDepthOnlyPass.hlsl"
             ENDHLSL
         }
 
@@ -325,7 +328,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #define DEPTH_NORMALS_PASS
 
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderDepthNormalsPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPDepthNormalsPass.hlsl"
             ENDHLSL
         }
 
@@ -342,7 +345,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma target 4.5
 
             #pragma vertex UniversalVertexMeta
-            #pragma fragment UniversalFragmentMeta
+            #pragma fragment UniversalFragmentMetaLit
 
             #pragma shader_feature EDITOR_VISUALIZATION
             #pragma shader_feature_local_fragment _SPECULAR_SETUP
@@ -355,10 +358,9 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma shader_feature_local_fragment _SPECGLOSSMAP
 
             #define META_PASS
-
+			
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderMetaPass.hlsl"
-
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPMetaPass.hlsl"
             ENDHLSL
         }
 
@@ -379,10 +381,11 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma fragment frag
             #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma shader_feature_local_fragment _ALPHAPREMULTIPLY_ON
-			
-			#define UNIVERSAL_2D_PASS
 
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShader2DPass.hlsl"
+            #define UNIVERSAL_2D_PASS
+
+			#include "ExampleShader.hlsl"
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URP2DPass.hlsl"
             ENDHLSL
         }
     }
@@ -404,7 +407,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             Name "ForwardLit"
             Tags{"LightMode" = "UniversalForward"}
 
-            Blend[_SrcBlend][_DstBlend]
+            Blend[_SrcBlend][_DstBlend], [_SrcBlendAlpha][_DstBlendAlpha]
             ZWrite[_ZWrite]
             Cull[_Cull]
 
@@ -425,7 +428,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma shader_feature_local _ _DETAIL_MULX2 _DETAIL_SCALED
             #pragma shader_feature_local_fragment _SURFACE_TYPE_TRANSPARENT
             #pragma shader_feature_local_fragment _ALPHATEST_ON
-            #pragma shader_feature_local_fragment _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature_local_fragment _ _ALPHAPREMULTIPLY_ON _ALPHAMODULATE_ON
             #pragma shader_feature_local_fragment _EMISSION
             #pragma shader_feature_local_fragment _METALLICSPECGLOSSMAP
             #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
@@ -463,7 +466,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #define FORWARD_PASS
 
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderLightingPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPLightingPass.hlsl"
             ENDHLSL
         }
 
@@ -499,10 +502,10 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma vertex ShadowPassVertex
             #pragma fragment ShadowPassFragment
 
-			#define SHADOWS_PASS
+            #define SHADOWS_PASS
 
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderShadowsPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPShadowsPass.hlsl"
             ENDHLSL
         }
 
@@ -512,7 +515,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             Tags{"LightMode" = "DepthOnly"}
 
             ZWrite On
-            ColorMask 0
+            ColorMask R
             Cull[_Cull]
 
             HLSLPROGRAM
@@ -534,7 +537,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #define DEPTH_ONLY_PASS
 
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderDepthOnlyPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPDepthOnlyPass.hlsl"
             ENDHLSL
         }
 
@@ -569,7 +572,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #define DEPTH_NORMALS_PASS
 
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderDepthNormalsPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPDepthNormalsPass.hlsl"
             ENDHLSL
         }
 
@@ -586,7 +589,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma target 2.0
 
             #pragma vertex UniversalVertexMeta
-            #pragma fragment UniversalFragmentMeta
+            #pragma fragment UniversalFragmentMetaLit
 
             #pragma shader_feature EDITOR_VISUALIZATION
             #pragma shader_feature_local_fragment _SPECULAR_SETUP
@@ -599,10 +602,9 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma shader_feature_local_fragment _SPECGLOSSMAP
 
             #define META_PASS
-
+            
 			#include "ExampleShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderMetaPass.hlsl"
-
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPMetaPass.hlsl"
             ENDHLSL
         }
         Pass
@@ -622,10 +624,11 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #pragma fragment frag
             #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma shader_feature_local_fragment _ALPHAPREMULTIPLY_ON
-			
-			#define UNIVERSAL_2D_PASS
 
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShader2DPass.hlsl"
+            #define UNIVERSAL_2D_PASS
+
+			#include "ExampleShader.hlsl"
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URP2DPass.hlsl"
             ENDHLSL
         }
     }

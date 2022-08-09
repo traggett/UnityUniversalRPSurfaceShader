@@ -1,8 +1,8 @@
-#ifndef UNIVERSAL_DEPTH_ONLY_PASS_INCLUDED
-#define UNIVERSAL_DEPTH_ONLY_PASS_INCLUDED
+#ifndef URP_SURFACE_SHADER_DEPTH_NORMALS_PASS_INCLUDED
+#define URP_SURFACE_SHADER_DEPTH_NORMALS_PASS_INCLUDED
 
-#include "URPSurfaceShaderInputs.hlsl"
-#include "URPSurfaceShaderMacros.hlsl"
+#include "URPShaderInputs.hlsl"
+#include "URPMacros.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
@@ -10,7 +10,9 @@ Varyings DepthNormalsVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
 	
+	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
+	////////////////////////////////
 	
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
@@ -20,13 +22,15 @@ Varyings DepthNormalsVertex(Attributes input)
 
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
     output.normalWS = NormalizeNormalPerVertex(normalInput.normalWS);
-
+	
+	////////////////////////////////
 	UPDATE_OUTPUT_VERTEX(output);
+	////////////////////////////////
 
     return output;
 }
 
-float4 DepthNormalsFragment(Varyings input) : SV_TARGET
+half4 DepthNormalsFragment(Varyings input) : SV_TARGET
 {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
@@ -43,4 +47,5 @@ float4 DepthNormalsFragment(Varyings input) : SV_TARGET
     return half4(normalWS, 0.0);
     #endif
 }
+
 #endif

@@ -3,7 +3,7 @@
 
 #define REQUIRES_VERTEX_COLOR
 
-#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderInputs.hlsl"
+#include "Packages/com.clarky.urpsurfaceshader/Includes/URPShaderInputs.hlsl"
 
 #if defined(FORWARD_PASS) || defined(GBUFFER_PASS)
 

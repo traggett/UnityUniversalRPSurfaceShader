@@ -1,8 +1,8 @@
 #ifndef URP_SURFACE_SHADER_SHADOWS_INCLUDED
 #define URP_SURFACE_SHADER_SHADOWS_INCLUDED
 
-#include "URPSurfaceShaderInputs.hlsl"
-#include "URPSurfaceShaderMacros.hlsl"
+#include "URPShaderInputs.hlsl"
+#include "URPMacros.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 
@@ -38,26 +38,27 @@ Varyings ShadowPassVertex(Attributes input)
 {
     Varyings output;
 	
+	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
+	////////////////////////////////
 	
-	UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_TRANSFER_INSTANCE_ID(input, output);
-    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-
+    UNITY_SETUP_INSTANCE_ID(input);
+	
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
     output.positionCS = GetShadowPositionHClip(input);
-    
+	
+	////////////////////////////////
 	UPDATE_OUTPUT_VERTEX(output);
+	////////////////////////////////
 	
     return output;
 }
 
 half4 ShadowPassFragment(Varyings input) : SV_TARGET
 {
-    UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-	
+	////////////////////////////////
 	UPDATE_SHADOW_SURFACE(input);
+	////////////////////////////////
 	
     Alpha(SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap)).a, _BaseColor, _Cutoff);
     return 0;

@@ -44,7 +44,7 @@ struct Varyings
     float3 positionWS               : TEXCOORD1;
 #endif
 
-    half3 normalWS                 : TEXCOORD2;
+    float3 normalWS                 : TEXCOORD2;
 #if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
     half4 tangentWS                : TEXCOORD3;    // xyz: tangent, w: sign
 #endif
@@ -96,8 +96,6 @@ struct Varyings
 {
     float2 uv           : TEXCOORD0;
     float4 positionCS   : SV_POSITION;
-    UNITY_VERTEX_INPUT_INSTANCE_ID
-    UNITY_VERTEX_OUTPUT_STEREO
 };
 
 /////////////////////////////////////////
@@ -131,24 +129,24 @@ struct Varyings
     half4 tangentWS                 : TEXCOORD3;    // xyz: tangent, w: sign
 #endif
 	
-	float3 viewDirWS                : TEXCOORD4;
-
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
-    half3 vertexLighting            : TEXCOORD5;    // xyz: vertex lighting
+    half3 vertexLighting            : TEXCOORD4;    // xyz: vertex lighting
 #endif
 
 #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
-    float4 shadowCoord              : TEXCOORD6;
+    float4 shadowCoord              : TEXCOORD5;
 #endif
 
 #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-    half3 viewDirTS                 : TEXCOORD7;
+    half3 viewDirTS                 : TEXCOORD6;
 #endif
 
-    DECLARE_LIGHTMAP_OR_SH(staticLightmapUV, vertexSH, 8);
+    DECLARE_LIGHTMAP_OR_SH(staticLightmapUV, vertexSH, 7);
 #ifdef DYNAMICLIGHTMAP_ON
-    float2  dynamicLightmapUV       : TEXCOORD9; // Dynamic lightmap UVs
+    float2  dynamicLightmapUV       : TEXCOORD8; // Dynamic lightmap UVs
 #endif
+
+	float3 viewDirWS                : TEXCOORD9;
 
 #if defined(REQUIRES_VERTEX_COLOR)
     float4 color               		: COLOR;
@@ -167,10 +165,8 @@ struct Varyings
 
 struct Attributes
 {
-    float4 positionOS   : POSITION;
+    float4 positionOS     : POSITION;
     float2 texcoord     : TEXCOORD0;
-    float3 normalOS     : NORMAL;
-
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -193,7 +189,7 @@ struct Attributes
     float4 positionOS   : POSITION;
     float4 tangentOS    : TANGENT;
     float2 texcoord     : TEXCOORD0;
-    float3 normalOS     : NORMAL;
+    float3 normalOS       : NORMAL;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -217,18 +213,20 @@ struct Attributes
 {
     float4 positionOS   : POSITION;
     float3 normalOS     : NORMAL;
-    float2 texcoord     : TEXCOORD0;
+    float2 uv0          : TEXCOORD0;
     float2 uv1          : TEXCOORD1;
     float2 uv2          : TEXCOORD2;
-#ifdef _TANGENT_TO_WORLD
-    float4 tangentOS     : TANGENT;
-#endif
+    UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
 struct Varyings
 {
     float4 positionCS   : SV_POSITION;
     float2 uv           : TEXCOORD0;
+#ifdef EDITOR_VISUALIZATION
+    float2 VizUV        : TEXCOORD1;
+    float4 LightCoord   : TEXCOORD2;
+#endif
 };
 
 /////////////////////////////////////////
@@ -240,15 +238,13 @@ struct Varyings
 struct Attributes
 {
     float4 positionOS       : POSITION;
-    float2 texcoord         : TEXCOORD0;
-	float3 normalOS     	: NORMAL;
-	float4 color			: COLOR;
+    float2 uv               : TEXCOORD0;
 };
 
 struct Varyings
 {
-	float4 positionCS 	: SV_POSITION;
     float2 uv        	: TEXCOORD0;
+    float4 vertex 		: SV_POSITION;
 	
 #if defined(REQUIRES_VERTEX_COLOR)
     float4 color        : COLOR;

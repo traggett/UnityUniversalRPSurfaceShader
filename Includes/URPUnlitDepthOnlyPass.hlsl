@@ -1,9 +1,8 @@
-#ifndef UNIVERSAL_DEPTH_ONLY_PASS_INCLUDED
-#define UNIVERSAL_DEPTH_ONLY_PASS_INCLUDED
+#ifndef URP_SURFACE_SHADER_UNLIT_DEPTH_ONLY_PASS_INCLUDED
+#define URP_SURFACE_SHADER_UNLIT_DEPTH_ONLY_PASS_INCLUDED
 
-#include "URPSurfaceShaderInputs.hlsl"
-#include "URPSurfaceShaderMacros.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+#include "URPUnlitInput.hlsl"
+#include "URPUnlitMacros.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
 Varyings DepthOnlyVertex(Attributes input)

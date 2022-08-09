@@ -1,8 +1,8 @@
-#ifndef URP_SURFACE_SHADER_INCLUDED
-#define URP_SURFACE_SHADER_INCLUDED
+#ifndef URP_SURFACE_SHADER_LIGHTING_INCLUDED
+#define URP_SURFACE_SHADER_LIGHTING_INCLUDED
 
-#include "URPSurfaceShaderInputs.hlsl"
-#include "URPSurfaceShaderMacros.hlsl"
+#include "URPShaderInputs.hlsl"
+#include "URPMacros.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 
 void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData)
@@ -68,14 +68,16 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 //                  Vertex and Fragment functions                            //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+// Used in Standard (Physically Based) shader
 Varyings LitPassVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
 	
+	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
-	
-	UNITY_SETUP_INSTANCE_ID(input);
+	////////////////////////////////
+
+    UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
@@ -131,19 +133,20 @@ Varyings LitPassVertex(Attributes input)
     output.shadowCoord = GetShadowCoord(vertexInput);
 #endif
 
+    output.positionCS = vertexInput.positionCS;
+	
 #if defined(REQUIRES_VERTEX_COLOR)
     output.color = input.color;
 #endif
-
-    output.positionCS = vertexInput.positionCS;
 	
+	////////////////////////////////
 	UPDATE_OUTPUT_VERTEX(output);
+	////////////////////////////////
 
     return output;
 }
 
-
-
+// Used in Standard (Physically Based) shader
 half4 LitPassFragment(Varyings input) : SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(input);
@@ -159,8 +162,10 @@ half4 LitPassFragment(Varyings input) : SV_Target
     ApplyPerPixelDisplacement(viewDirTS, input.uv);
 #endif
 
+	////////////////////////////////
     SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
-
+	////////////////////////////////
+	
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);
     SETUP_DEBUG_TEXTURE_DATA(inputData, input.uv, _BaseMap);
@@ -170,9 +175,9 @@ half4 LitPassFragment(Varyings input) : SV_Target
 #endif
 
     half4 color = UniversalFragmentPBR(inputData, surfaceData);
-
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
     color.a = OutputAlpha(color.a, _Surface);
+	
     return color;
 }
 
