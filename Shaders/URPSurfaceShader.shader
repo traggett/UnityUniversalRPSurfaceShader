@@ -1,4 +1,4 @@
-Shader "Universal Render Pipeline/Surface Shader"
+Shader "Hidden/Surface Shader"
 
 {
     Properties

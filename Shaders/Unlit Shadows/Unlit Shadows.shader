@@ -1,4 +1,4 @@
-Shader "Unlit Shadows"
+Shader "Universal Render Pipeline/Unlit Shadows"
 {
     Properties
     {
@@ -14,6 +14,8 @@ Shader "Unlit Shadows"
         [HideInInspector] _BlendOp("__blendop", Float) = 0.0
         [HideInInspector] _SrcBlend("__src", Float) = 1.0
         [HideInInspector] _DstBlend("__dst", Float) = 0.0
+        [HideInInspector] _SrcBlendAlpha("__srcA", Float) = 1.0
+        [HideInInspector] _DstBlendAlpha("__dstA", Float) = 0.0
         [HideInInspector] _ZWrite("__zw", Float) = 1.0
 
         // Editmode props
@@ -30,7 +32,7 @@ Shader "Unlit Shadows"
         Tags {"RenderType" = "Opaque" "IgnoreProjector" = "True" "RenderPipeline" = "UniversalPipeline" "ShaderModel"="4.5"}
         LOD 100
 
-        Blend [_SrcBlend][_DstBlend]
+        Blend [_SrcBlend][_DstBlend], [_SrcBlendAlpha][_DstBlendAlpha]
         ZWrite [_ZWrite]
         Cull [_Cull]
 
@@ -44,7 +46,7 @@ Shader "Unlit Shadows"
 
             #pragma shader_feature_local_fragment _SURFACE_TYPE_TRANSPARENT
             #pragma shader_feature_local_fragment _ALPHATEST_ON
-            #pragma shader_feature_local_fragment _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature_local_fragment _ALPHAMODULATE_ON
 
             // -------------------------------------
             // Unity defined keywords
@@ -58,8 +60,9 @@ Shader "Unlit Shadows"
             #pragma vertex UnlitPassVertex
             #pragma fragment UnlitPassFragment
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitForwardPass.hlsl"
+            #define FORWARD_PASS
+			
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitForwardPass.hlsl"
             ENDHLSL
         }
 		
@@ -82,29 +85,33 @@ Shader "Unlit Shadows"
             #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
 
-			#pragma multi_compile FLIP_DISSOLVE
-
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
             #pragma multi_compile _ DOTS_INSTANCING_ON
 
+            // -------------------------------------
+            // Universal Pipeline keywords
+
+            // This is used during shadow map generation to differentiate between directional and punctual light shadows, as they use different formulas to apply Normal Bias
+            #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+
             #pragma vertex ShadowPassVertex
             #pragma fragment ShadowPassFragment
-			
-			#define SHADOWS_PASS
-			
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderShadowsPass.hlsl"
+
+            #define SHADOWS_PASS
+
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPShadowsPass.hlsl"
             ENDHLSL
         }
-
+		
         Pass
         {
             Name "DepthOnly"
             Tags{"LightMode" = "DepthOnly"}
 
             ZWrite On
-            ColorMask 0
+            ColorMask R
 
             HLSLPROGRAM
             #pragma exclude_renderers gles gles3 glcore
@@ -122,8 +129,9 @@ Shader "Unlit Shadows"
             #pragma multi_compile_instancing
             #pragma multi_compile _ DOTS_INSTANCING_ON
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
+            #define DEPTH_ONLY_PASS
+			
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthOnlyPass.hlsl"
             ENDHLSL
         }
 
@@ -154,8 +162,9 @@ Shader "Unlit Shadows"
             #pragma multi_compile_instancing
             #pragma multi_compile _ DOTS_INSTANCING_ON
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitDepthNormalsPass.hlsl"
+            #define DEPTH_NORMALS_PASS
+			
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthNormalsPass.hlsl"
             ENDHLSL
         }
 
@@ -175,8 +184,9 @@ Shader "Unlit Shadows"
             #pragma fragment UniversalFragmentMetaUnlit
             #pragma shader_feature EDITOR_VISUALIZATION
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitMetaPass.hlsl"
+            #define META_PASS
+			
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMetaPass.hlsl"
             ENDHLSL
         }
     }
@@ -186,7 +196,7 @@ Shader "Unlit Shadows"
         Tags {"RenderType" = "Opaque" "IgnoreProjector" = "True" "RenderPipeline" = "UniversalPipeline" "ShaderModel"="2.0"}
         LOD 100
 
-        Blend [_SrcBlend][_DstBlend]
+        Blend [_SrcBlend][_DstBlend], [_SrcBlendAlpha][_DstBlendAlpha]
         ZWrite [_ZWrite]
         Cull [_Cull]
 
@@ -200,7 +210,7 @@ Shader "Unlit Shadows"
 
             #pragma shader_feature_local_fragment _SURFACE_TYPE_TRANSPARENT
             #pragma shader_feature_local_fragment _ALPHATEST_ON
-            #pragma shader_feature_local_fragment _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature_local_fragment _ALPHAMODULATE_ON
 
             // -------------------------------------
             // Unity defined keywords
@@ -212,8 +222,9 @@ Shader "Unlit Shadows"
             #pragma vertex UnlitPassVertex
             #pragma fragment UnlitPassFragment
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitForwardPass.hlsl"
+            #define FORWARD_PASS
+			
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitForwardPass.hlsl"
             ENDHLSL
         }
 		
@@ -228,7 +239,7 @@ Shader "Unlit Shadows"
             Cull[_Cull]
 
             HLSLPROGRAM
-            #pragma only_renderers gles gles3 glcore
+            #pragma only_renderers gles gles3 glcore d3d11
             #pragma target 2.0
 
             //--------------------------------------
@@ -239,27 +250,29 @@ Shader "Unlit Shadows"
             // Material Keywords
             #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
-			
-			// -------------------------------------
-            // Custom keywords
-			#pragma multi_compile FLIP_DISSOLVE
-			
+
+            // -------------------------------------
+            // Universal Pipeline keywords
+
+            // This is used during shadow map generation to differentiate between directional and punctual light shadows, as they use different formulas to apply Normal Bias
+            #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+
             #pragma vertex ShadowPassVertex
             #pragma fragment ShadowPassFragment
-			
-			#define SHADOWS_PASS
-			
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPSurfaceShaderShadowsPass.hlsl"
+
+            #define SHADOWS_PASS
+
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitShadowsPass.hlsl"
             ENDHLSL
         }
-		
+
         Pass
         {
             Name "DepthOnly"
             Tags{"LightMode" = "DepthOnly"}
 
             ZWrite On
-            ColorMask 0
+            ColorMask R
 
             HLSLPROGRAM
             #pragma only_renderers gles gles3 glcore d3d11
@@ -276,8 +289,9 @@ Shader "Unlit Shadows"
             // GPU Instancing
             #pragma multi_compile_instancing
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
+            #define DEPTH_ONLY_PASS
+			
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthOnlyPass.hlsl"
             ENDHLSL
         }
 
@@ -308,8 +322,9 @@ Shader "Unlit Shadows"
             #pragma multi_compile_instancing
             #pragma multi_compile _ DOTS_INSTANCING_ON
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitDepthNormalsPass.hlsl"
+            #define DEPTH_NORMALS_PASS
+			
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthNormalsPass.hlsl"
             ENDHLSL
         }
 
@@ -329,12 +344,13 @@ Shader "Unlit Shadows"
             #pragma fragment UniversalFragmentMetaUnlit
             #pragma shader_feature EDITOR_VISUALIZATION
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitMetaPass.hlsl"
-
+            #define META_PASS
+			
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMetaPass.hlsl"
             ENDHLSL
         }
     }
     FallBack "Hidden/Universal Render Pipeline/FallbackError"
     CustomEditor "UnityEditor.Rendering.Universal.ShaderGUI.UnlitShader"
 }
+

@@ -1,4 +1,4 @@
-Shader "Universal Render Pipeline/Unlit Surface Shader"
+Shader "Hidden/Unlit Surface Shader"
 {
     Properties
     {
@@ -17,7 +17,6 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
         [HideInInspector] _SrcBlendAlpha("__srcA", Float) = 1.0
         [HideInInspector] _DstBlendAlpha("__dstA", Float) = 0.0
         [HideInInspector] _ZWrite("__zw", Float) = 1.0
-        [HideInInspector] _AlphaToMask("__alphaToMask", Float) = 0.0
 
         // Editmode props
         _QueueOffset("Queue offset", Float) = 0.0
@@ -41,8 +40,6 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
         {
             Name "Unlit"
 
-            AlphaToMask[_AlphaToMask]
-
             HLSLPROGRAM
             #pragma exclude_renderers gles gles3 glcore
             #pragma target 4.5
@@ -59,13 +56,11 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
             #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
             #pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
             #pragma multi_compile _ DEBUG_DISPLAY
-            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
 
             #pragma vertex UnlitPassVertex
             #pragma fragment UnlitPassFragment
-			
-			#define FORWARD_PASS
+
+            #define FORWARD_PASS
 			
 			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitForwardPass.hlsl"
             ENDHLSL
@@ -90,16 +85,12 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
             // Material Keywords
             #pragma shader_feature_local_fragment _ALPHATEST_ON
 
-            // -------------------------------------
-            // Unity defined keywords
-            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
             #pragma multi_compile _ DOTS_INSTANCING_ON
-			
-			#define DEPTH_ONLY_PASS
+
+            #define DEPTH_ONLY_PASS
 			
 			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthOnlyPass.hlsl"
             ENDHLSL
@@ -124,17 +115,15 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
             #pragma shader_feature_local_fragment _ALPHATEST_ON
 
             // -------------------------------------
-            // Universal Pipeline keywords
+            // Unity defined keywords
             #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT // forward-only variant
-            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
 
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
             #pragma multi_compile _ DOTS_INSTANCING_ON
-			
-			 #define DEPTH_NORMALS_PASS
+
+            #define DEPTH_NORMALS_PASS
 			
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthNormalsPass.hlsl"
             ENDHLSL
@@ -152,11 +141,11 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
             #pragma exclude_renderers gles gles3 glcore
             #pragma target 4.5
 
-            #pragma vertex UniversalVertexMetaUnlit
+            #pragma vertex UniversalVertexMeta
             #pragma fragment UniversalFragmentMetaUnlit
             #pragma shader_feature EDITOR_VISUALIZATION
-			
-			#define META_PASS
+
+            #define META_PASS
 			
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMetaPass.hlsl"
             ENDHLSL
@@ -176,8 +165,6 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
         {
             Name "Unlit"
 
-            AlphaToMask[_AlphaToMask]
-
             HLSLPROGRAM
             #pragma only_renderers gles gles3 glcore d3d11
             #pragma target 2.0
@@ -192,14 +179,11 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
             #pragma multi_compile_instancing
             #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
             #pragma multi_compile _ DEBUG_DISPLAY
-            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #pragma multi_compile _ DOTS_INSTANCING_ON
-            #pragma target 3.5 DOTS_INSTANCING_ON
 
             #pragma vertex UnlitPassVertex
             #pragma fragment UnlitPassFragment
-			
-			#define FORWARD_PASS
+
+            #define FORWARD_PASS
 			
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitForwardPass.hlsl"
             ENDHLSL
@@ -224,17 +208,11 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
             // Material Keywords
             #pragma shader_feature_local_fragment _ALPHATEST_ON
 
-            // -------------------------------------
-            // Unity defined keywords
-            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
-            #pragma multi_compile _ DOTS_INSTANCING_ON
-            #pragma target 3.5 DOTS_INSTANCING_ON
-			
-			#define DEPTH_ONLY_PASS
+
+            #define DEPTH_ONLY_PASS
 			
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthOnlyPass.hlsl"
             ENDHLSL
@@ -261,15 +239,13 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
             // -------------------------------------
             // Unity defined keywords
             #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT // forward-only variant
-            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
 
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
             #pragma multi_compile _ DOTS_INSTANCING_ON
-            #pragma target 3.5 DOTS_INSTANCING_ON
-			
-			 #define DEPTH_NORMALS_PASS
+
+            #define DEPTH_NORMALS_PASS
 			
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthNormalsPass.hlsl"
             ENDHLSL
@@ -287,17 +263,17 @@ Shader "Universal Render Pipeline/Unlit Surface Shader"
             #pragma only_renderers gles gles3 glcore d3d11
             #pragma target 2.0
 
-            #pragma vertex UniversalVertexMetaUnlit
+            #pragma vertex UniversalVertexMeta
             #pragma fragment UniversalFragmentMetaUnlit
             #pragma shader_feature EDITOR_VISUALIZATION
-			
-			#define META_PASS
+
+            #define META_PASS
 			
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMetaPass.hlsl"
-
             ENDHLSL
         }
     }
     FallBack "Hidden/Universal Render Pipeline/FallbackError"
     CustomEditor "UnityEditor.Rendering.Universal.ShaderGUI.UnlitShader"
 }
+

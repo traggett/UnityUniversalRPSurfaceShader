@@ -1,16 +1,18 @@
 #ifndef URP_SURFACE_SHADER_UNLIT_DEPTH_NORMALS_PASS_INCLUDED
 #define URP_SURFACE_SHADER_UNLIT_DEPTH_NORMALS_PASS_INCLUDED
 
-#include "URPUnlitInput.hlsl"
-#include "URPUnlitMacros.hlsl"
+#include "URPUnlitShaderInputs.hlsl"
+#include "URPMacros.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-#if defined(LOD_FADE_CROSSFADE)
-    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
-#endif
 
 Varyings DepthNormalsVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
+	
+	////////////////////////////////
+	UPDATE_INPUT_VERTEX(input);
+	////////////////////////////////
+	
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
@@ -19,22 +21,16 @@ Varyings DepthNormalsVertex(Attributes input)
     VertexNormalInputs normalInput = GetVertexNormalInputs(input.normal, input.tangentOS);
     output.normalWS = NormalizeNormalPerVertex(normalInput.normalWS);
 
+	////////////////////////////////
+	UPDATE_OUTPUT_VERTEX(output);
+	////////////////////////////////
+	
     return output;
 }
 
-void DepthNormalsFragment(
-    Varyings input
-    , out half4 outNormalWS : SV_Target0
-#ifdef _WRITE_RENDERING_LAYERS
-    , out float4 outRenderingLayers : SV_Target1
-#endif
-)
+float4 DepthNormalsFragment(Varyings input) : SV_TARGET
 {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-
-    #ifdef LOD_FADE_CROSSFADE
-        LODFadeCrossFade(input.positionCS);
-    #endif
 
     // Output...
     #if defined(_GBUFFER_NORMALS_OCT)
@@ -42,14 +38,9 @@ void DepthNormalsFragment(
         float2 octNormalWS = PackNormalOctQuadEncode(normalWS);             // values between [-1, +1], must use fp32 on some platforms
         float2 remappedOctNormalWS = saturate(octNormalWS * 0.5 + 0.5);     // values between [ 0,  1]
         half3 packedNormalWS = half3(PackFloat2To888(remappedOctNormalWS)); // values between [ 0,  1]
-        outNormalWS = half4(packedNormalWS, 0.0);
+        return half4(packedNormalWS, 0.0);
     #else
-        outNormalWS = half4(NormalizeNormalPerPixel(input.normalWS), 0.0);
-    #endif
-
-    #ifdef _WRITE_RENDERING_LAYERS
-        uint renderingLayers = GetMeshRenderingLayer();
-        outRenderingLayers = float4(EncodeMeshRenderingLayer(renderingLayers), 0, 0, 0);
+        return half4(NormalizeNormalPerPixel(input.normalWS), 0.0);
     #endif
 }
 
