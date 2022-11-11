@@ -15,7 +15,7 @@ struct Attributes
     float4 positionOS : POSITION;
     float2 texcoord : TEXCOORD0;
 	float3 normalOS : NORMAL;
-	
+	float4 color	: COLOR;
     #if defined(DEBUG_DISPLAY)  
     float4 tangentOS : TANGENT;
     #endif
@@ -28,6 +28,10 @@ struct Varyings
     float2 uv : TEXCOORD0;
     float fogCoord : TEXCOORD1;
     float4 positionCS : SV_POSITION;
+
+#if defined(REQUIRES_VERTEX_COLOR)
+    float4 color               		: COLOR;
+#endif
 
     #if defined(DEBUG_DISPLAY)
     float3 positionWS : TEXCOORD2;
