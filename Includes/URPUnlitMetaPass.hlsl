@@ -39,7 +39,7 @@ half4 UniversalFragmentMetaUnlit(Varyings input) : SV_Target
 	
 	AlphaDiscard(alpha, _Cutoff);
     color = AlphaModulate(color, alpha);
-	
+	 
     metaInput.Albedo = color;
 	
 #ifdef EDITOR_VISUALIZATION

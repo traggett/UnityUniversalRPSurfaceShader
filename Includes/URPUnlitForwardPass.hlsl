@@ -12,6 +12,7 @@ void InitializeInputData(Varyings input, out InputData inputData)
 
     #if defined(DEBUG_DISPLAY)
     inputData.positionWS = input.positionWS;
+    inputData.positionCS = input.positionCS;
     inputData.normalWS = input.normalWS;
     inputData.viewDirectionWS = input.viewDirWS;
     #else
@@ -30,16 +31,16 @@ void InitializeInputData(Varyings input, out InputData inputData)
 Varyings UnlitPassVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
-
+	
+	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_TRANSFER_INSTANCE_ID(input, output);
+    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+	
 	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
 	////////////////////////////////
 	
-    UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_TRANSFER_INSTANCE_ID(input, output);
-    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-
-    VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
+	VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 
     output.positionCS = vertexInput.positionCS;
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
@@ -61,10 +62,6 @@ Varyings UnlitPassVertex(Attributes input)
     output.normalWS = normalInput.normalWS;
     output.viewDirWS = viewDirWS;
     #endif
-
-#if defined(REQUIRES_VERTEX_COLOR)
-    output.color = input.color;
-#endif
 	
 	////////////////////////////////
 	UPDATE_OUTPUT_VERTEX(output);
@@ -73,7 +70,13 @@ Varyings UnlitPassVertex(Attributes input)
     return output;
 }
 
-half4 UnlitPassFragment(Varyings input) : SV_Target
+void UnlitPassFragment(
+    Varyings input
+    , out half4 outColor : SV_Target0
+#ifdef _WRITE_RENDERING_LAYERS
+    , out float4 outRenderingLayers : SV_Target1
+#endif
+)
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -84,12 +87,16 @@ half4 UnlitPassFragment(Varyings input) : SV_Target
 	GET_UNLIT_SURFACE_PROPERTIES(input, color, alpha);
 	////////////////////////////////
 
-    AlphaDiscard(alpha, _Cutoff);
+    alpha = AlphaDiscard(alpha, _Cutoff);
     color = AlphaModulate(color, alpha);
-	
-	InputData inputData;
+
+#ifdef LOD_FADE_CROSSFADE
+    LODFadeCrossFade(input.positionCS);
+#endif
+
+    InputData inputData;
     InitializeInputData(input, inputData);
-    SETUP_DEBUG_TEXTURE_DATA(inputData, input.uv, _BaseMap);
+    SETUP_DEBUG_TEXTURE_DATA(inputData, UNDO_TRANSFORM_TEX(input.uv, _BaseMap));
 
 #ifdef _DBUFFER
     ApplyDecalToBaseColor(input.positionCS, color);
@@ -115,8 +122,14 @@ half4 UnlitPassFragment(Varyings input) : SV_Target
     half fogFactor = input.fogCoord;
 #endif
     finalColor.rgb = MixFog(finalColor.rgb, fogFactor);
+    finalColor.a = OutputAlpha(finalColor.a, IsSurfaceTypeTransparent(_Surface));
 
-    return finalColor;
+    outColor = finalColor;
+
+#ifdef _WRITE_RENDERING_LAYERS
+    uint renderingLayers = GetMeshRenderingLayer();
+    outRenderingLayers = float4(EncodeMeshRenderingLayer(renderingLayers), 0, 0, 0);
+#endif
 }
 
 #endif

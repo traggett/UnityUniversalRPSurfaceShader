@@ -3,8 +3,12 @@
 
 #include "URPUnlitShaderInputs.hlsl"
 #include "URPMacros.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+#if defined(LOD_FADE_CROSSFADE)
+    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
+#endif
 
 // Shadow Casting Light geometric parameters. These variables are used when applying the shadow Normal Bias and are set by UnityEngine.Rendering.Universal.ShadowUtils.SetupShadowCasterConstantBuffer in com.unity.render-pipelines.universal/Runtime/ShadowUtils.cs
 // For Directional lights, _LightDirection is used when applying shadow Normal Bias.
@@ -24,13 +28,7 @@ float4 GetShadowPositionHClip(Attributes input)
 #endif
 
     float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDirectionWS));
-
-#if UNITY_REVERSED_Z
-    positionCS.z = min(positionCS.z, UNITY_NEAR_CLIP_VALUE);
-#else
-    positionCS.z = max(positionCS.z, UNITY_NEAR_CLIP_VALUE);
-#endif
-
+    positionCS = ApplyShadowClamping(positionCS);
     return positionCS;
 }
 
@@ -38,11 +36,12 @@ Varyings ShadowPassVertex(Attributes input)
 {
     Varyings output;
 	
+	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_TRANSFER_INSTANCE_ID(input, output);
+	
 	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
 	////////////////////////////////
-	
-    UNITY_SETUP_INSTANCE_ID(input);
 	
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
     output.positionCS = GetShadowPositionHClip(input);
@@ -56,12 +55,21 @@ Varyings ShadowPassVertex(Attributes input)
 
 half4 ShadowPassFragment(Varyings input) : SV_TARGET
 {
+	UNITY_SETUP_INSTANCE_ID(input);
+
 	////////////////////////////////
 	UPDATE_SHADOW_SURFACE(input);
 	////////////////////////////////
 	
-    Alpha(SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap)).a, _BaseColor, _Cutoff);
-    return 0;
+    #if defined(_ALPHATEST_ON)
+        Alpha(SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap)).a, _BaseColor, _Cutoff);
+    #endif
+
+    #if defined(LOD_FADE_CROSSFADE)
+        LODFadeCrossFade(input.positionCS);
+    #endif
+	
+	return 0;
 }
 
 #endif // URP_SURFACE_SHADER_SHADOWS_INCLUDED

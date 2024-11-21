@@ -1,8 +1,11 @@
 #ifndef URP_SURFACE_SHADER_INPUTS_INCLUDED
 #define URP_SURFACE_SHADER_INPUTS_INCLUDED
 
-// GLES2 has limited amount of interpolators
-#if defined(_PARALLAXMAP) && !defined(SHADER_API_GLES)
+// TODO: Currently we support viewDirTS caclulated in vertex shader and in fragments shader.
+// As both solutions have their advantages and disadvantages (etc. shader target 2.0 has only 8 interpolators).
+// We need to find out if we can stick to one solution, which we needs testing.
+// So keeping this until I get manaul QA pass.
+#if defined(_PARALLAXMAP) && (SHADER_TARGET >= 30)
 #define REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR
 #endif
 
@@ -94,7 +97,7 @@ struct Attributes
 
 struct Varyings
 {
-    float2 uv           : TEXCOORD0;
+	float2 uv       	: TEXCOORD0;
     float4 positionCS   : SV_POSITION;
 };
 
@@ -109,10 +112,11 @@ struct Attributes
     float4 positionOS   : POSITION;
     float3 normalOS     : NORMAL;
     float4 tangentOS    : TANGENT;
-	float4 color		: COLOR;
     float2 texcoord     : TEXCOORD0;
+	float4 color		: COLOR;
     float2 staticLightmapUV   : TEXCOORD1;
     float2 dynamicLightmapUV  : TEXCOORD2;
+	
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -128,7 +132,6 @@ struct Varyings
 #if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
     half4 tangentWS                 : TEXCOORD3;    // xyz: tangent, w: sign
 #endif
-	
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     half3 vertexLighting            : TEXCOORD4;    // xyz: vertex lighting
 #endif
@@ -146,13 +149,16 @@ struct Varyings
     float2  dynamicLightmapUV       : TEXCOORD8; // Dynamic lightmap UVs
 #endif
 
-	float3 viewDirWS                : TEXCOORD9;
+#ifdef USE_APV_PROBE_OCCLUSION
+    float4 probeOcclusion           : TEXCOORD9;
+#endif
 
+    float4 positionCS               : SV_POSITION;
+	
 #if defined(REQUIRES_VERTEX_COLOR)
     float4 color               		: COLOR;
 #endif
 
-    float4 positionCS               : SV_POSITION;
     UNITY_VERTEX_INPUT_INSTANCE_ID
     UNITY_VERTEX_OUTPUT_STEREO
 };

@@ -16,13 +16,13 @@ Varyings UniversalVertexMeta(Attributes input)
     output.positionCS = UnityMetaVertexPosition(input.positionOS.xyz, input.texcoord2, input.texcoord3);
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 	
-#ifdef EDITOR_VISUALIZATION
-    UnityEditorVizData(input.positionOS.xyz, input.texcoord, input.texcoord2, input.texcoord3, output.VizUV, output.LightCoord);
-#endif
-	
 	////////////////////////////////
 	UPDATE_OUTPUT_VERTEX(output);
 	////////////////////////////////
+	
+#ifdef EDITOR_VISUALIZATION
+	UnityEditorVizData(input.positionOS.xyz, input.uv0, input.uv1, input.uv2, output.VizUV, output.LightCoord);
+#endif
 	
     return output;
 }
@@ -32,7 +32,7 @@ half4 UniversalFragmentMetaLit(Varyings input) : SV_Target
 	////////////////////////////////
     SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
 	////////////////////////////////
-
+	
     BRDFData brdfData;
     InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.alpha, brdfData);
 
@@ -41,8 +41,8 @@ half4 UniversalFragmentMetaLit(Varyings input) : SV_Target
     metaInput.Emission = surfaceData.emission;
 	
 #ifdef EDITOR_VISUALIZATION
-    metaInput.VizUV = fragIn.VizUV;
-    metaInput.LightCoord = fragIn.LightCoord;
+	metaInput.VizUV = fragIn.VizUV;
+	metaInput.LightCoord = fragIn.LightCoord;
 #endif
 
     return UnityMetaFragment(metaInput);

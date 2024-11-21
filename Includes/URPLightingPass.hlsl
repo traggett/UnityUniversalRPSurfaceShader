@@ -13,6 +13,11 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     inputData.positionWS = input.positionWS;
 #endif
 
+#if defined(DEBUG_DISPLAY)
+    inputData.positionCS = input.positionCS;
+#endif
+
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
 #if defined(_NORMALMAP) || defined(_DETAIL)
     float sgn = input.tangentWS.w;      // should be either +1 or -1
     float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
@@ -27,7 +32,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 #endif
 
     inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
-    inputData.viewDirectionWS = input.viewDirWS;
+    inputData.viewDirectionWS = viewDirWS;
 
 #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
     inputData.shadowCoord = input.shadowCoord;
@@ -43,14 +48,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     inputData.fogCoord = InitializeInputDataFog(float4(input.positionWS, 1.0), input.fogFactor);
 #endif
 
-#if defined(DYNAMICLIGHTMAP_ON)
-    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.dynamicLightmapUV, input.vertexSH, inputData.normalWS);
-#else
-    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.vertexSH, inputData.normalWS);
-#endif
-
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
-    inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
 
     #if defined(DEBUG_DISPLAY)
     #if defined(DYNAMICLIGHTMAP_ON)
@@ -61,6 +59,28 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     #else
     inputData.vertexSH = input.vertexSH;
     #endif
+    #if defined(USE_APV_PROBE_OCCLUSION)
+    inputData.probeOcclusion = input.probeOcclusion;
+    #endif
+    #endif
+}
+
+void InitializeBakedGIData(Varyings input, inout InputData inputData)
+{
+    #if defined(DYNAMICLIGHTMAP_ON)
+    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.dynamicLightmapUV, input.vertexSH, inputData.normalWS);
+    inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
+    #elif !defined(LIGHTMAP_ON) && (defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2))
+    inputData.bakedGI = SAMPLE_GI(input.vertexSH,
+        GetAbsolutePositionWS(inputData.positionWS),
+        inputData.normalWS,
+        inputData.viewDirectionWS,
+        input.positionCS.xy,
+        input.probeOcclusion,
+        inputData.shadowMask);
+    #else
+    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.vertexSH, inputData.normalWS);
+    inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
     #endif
 }
 
@@ -73,13 +93,13 @@ Varyings LitPassVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
 	
+	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_TRANSFER_INSTANCE_ID(input, output);
+    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+	
 	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
 	////////////////////////////////
-
-    UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_TRANSFER_INSTANCE_ID(input, output);
-    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 
@@ -107,10 +127,9 @@ Varyings LitPassVertex(Attributes input)
     output.tangentWS = tangentWS;
 #endif
 
-	output.viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
-
 #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-    half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, output.viewDirWS);
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
+    half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, viewDirWS);
     output.viewDirTS = viewDirTS;
 #endif
 
@@ -118,7 +137,7 @@ Varyings LitPassVertex(Attributes input)
 #ifdef DYNAMICLIGHTMAP_ON
     output.dynamicLightmapUV = input.dynamicLightmapUV.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
 #endif
-    OUTPUT_SH(output.normalWS.xyz, output.vertexSH);
+    OUTPUT_SH4(vertexInput.positionWS, output.normalWS.xyz, GetWorldSpaceNormalizeViewDir(vertexInput.positionWS), output.vertexSH, output.probeOcclusion);
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     output.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
 #else
@@ -135,10 +154,6 @@ Varyings LitPassVertex(Attributes input)
 
     output.positionCS = vertexInput.positionCS;
 	
-#if defined(REQUIRES_VERTEX_COLOR)
-    output.color = input.color;
-#endif
-	
 	////////////////////////////////
 	UPDATE_OUTPUT_VERTEX(output);
 	////////////////////////////////
@@ -147,7 +162,13 @@ Varyings LitPassVertex(Attributes input)
 }
 
 // Used in Standard (Physically Based) shader
-half4 LitPassFragment(Varyings input) : SV_Target
+void LitPassFragment(
+    Varyings input
+    , out half4 outColor : SV_Target0
+#ifdef _WRITE_RENDERING_LAYERS
+    , out float4 outRenderingLayers : SV_Target1
+#endif
+)
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -162,23 +183,33 @@ half4 LitPassFragment(Varyings input) : SV_Target
     ApplyPerPixelDisplacement(viewDirTS, input.uv);
 #endif
 
-	////////////////////////////////
-    SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
-	////////////////////////////////
-	
+    SurfaceData surfaceData;
+    InitializeStandardLitSurfaceData(input.uv, surfaceData);
+
+#ifdef LOD_FADE_CROSSFADE
+    LODFadeCrossFade(input.positionCS);
+#endif
+
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);
-    SETUP_DEBUG_TEXTURE_DATA(inputData, input.uv, _BaseMap);
+    SETUP_DEBUG_TEXTURE_DATA(inputData, UNDO_TRANSFORM_TEX(input.uv, _BaseMap));
 
-#ifdef _DBUFFER
+#if defined(_DBUFFER)
     ApplyDecalToSurfaceData(input.positionCS, surfaceData, inputData);
 #endif
 
+    InitializeBakedGIData(input, inputData);
+
     half4 color = UniversalFragmentPBR(inputData, surfaceData);
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
-    color.a = OutputAlpha(color.a, _Surface);
-	
-    return color;
+    color.a = OutputAlpha(color.a, IsSurfaceTypeTransparent(_Surface));
+
+    outColor = color;
+
+#ifdef _WRITE_RENDERING_LAYERS
+    uint renderingLayers = GetMeshRenderingLayer();
+    outRenderingLayers = float4(EncodeMeshRenderingLayer(renderingLayers), 0, 0, 0);
+#endif
 }
 
 #endif

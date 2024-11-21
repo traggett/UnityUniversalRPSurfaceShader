@@ -16,6 +16,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     #endif
 
     inputData.positionCS = input.positionCS;
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
     #if defined(_NORMALMAP) || defined(_DETAIL)
         float sgn = input.tangentWS.w;      // should be either +1 or -1
         float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
@@ -25,7 +26,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     #endif
 
     inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
-    inputData.viewDirectionWS = input.viewDirWS;
+    inputData.viewDirectionWS = viewDirWS;
 
     #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
         inputData.shadowCoord = input.shadowCoord;
@@ -43,14 +44,26 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
         inputData.vertexLighting = half3(0, 0, 0);
     #endif
 
+    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+}
+
+void InitializeBakedGIData(Varyings input, inout InputData inputData)
+{
 #if defined(DYNAMICLIGHTMAP_ON)
     inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.dynamicLightmapUV, input.vertexSH, inputData.normalWS);
+    inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
+#elif !defined(LIGHTMAP_ON) && (defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2))
+    inputData.bakedGI = SAMPLE_GI(input.vertexSH,
+        GetAbsolutePositionWS(inputData.positionWS),
+        inputData.normalWS,
+        inputData.viewDirectionWS,
+        inputData.positionCS.xy,
+        input.probeOcclusion,
+        inputData.shadowMask);
 #else
     inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.vertexSH, inputData.normalWS);
-#endif
-
-    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
     inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,13 +75,13 @@ Varyings LitGBufferPassVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
 	
+	UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_TRANSFER_INSTANCE_ID(input, output);
+    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+	
 	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
 	////////////////////////////////
-
-    UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_TRANSFER_INSTANCE_ID(input, output);
-    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 
@@ -90,11 +103,10 @@ Varyings LitGBufferPassVertex(Attributes input)
     #if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
         output.tangentWS = tangentWS;
     #endif
-	
-	output.viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
 
     #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-        half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, output.viewDirWS);
+        half3 viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
+        half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, viewDirWS);
         output.viewDirTS = viewDirTS;
     #endif
 
@@ -102,7 +114,7 @@ Varyings LitGBufferPassVertex(Attributes input)
 #ifdef DYNAMICLIGHTMAP_ON
     output.dynamicLightmapUV = input.dynamicLightmapUV.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
 #endif
-    OUTPUT_SH(output.normalWS.xyz, output.vertexSH);
+    OUTPUT_SH4(vertexInput.positionWS, output.normalWS.xyz, GetWorldSpaceNormalizeViewDir(vertexInput.positionWS), output.vertexSH, output.probeOcclusion);
 
     #ifdef _ADDITIONAL_LIGHTS_VERTEX
         half3 vertexLight = VertexLighting(vertexInput.positionWS, normalInput.normalWS);
@@ -137,25 +149,31 @@ FragmentOutput LitGBufferPassFragment(Varyings input)
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
 #if defined(_PARALLAXMAP)
-#if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-    half3 viewDirTS = input.viewDirTS;
-#else
-    half3 viewDirTS = GetViewDirectionTangentSpace(input.tangentWS, input.normalWS, input.viewDirWS);
-#endif
+    #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
+        half3 viewDirTS = input.viewDirTS;
+    #else
+        half3 viewDirWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
+        half3 viewDirTS = GetViewDirectionTangentSpace(input.tangentWS, input.normalWS, viewDirWS);
+    #endif
     ApplyPerPixelDisplacement(viewDirTS, input.uv);
 #endif
 
-	////////////////////////////////
-    SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
-	////////////////////////////////
+    SurfaceData surfaceData;
+    InitializeStandardLitSurfaceData(input.uv, surfaceData);
+
+#ifdef LOD_FADE_CROSSFADE
+    LODFadeCrossFade(input.positionCS);
+#endif
 
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);
-    SETUP_DEBUG_TEXTURE_DATA(inputData, input.uv, _BaseMap);
+    SETUP_DEBUG_TEXTURE_DATA(inputData, UNDO_TRANSFORM_TEX(input.uv, _BaseMap));
 
-#ifdef _DBUFFER
+#if defined(_DBUFFER)
     ApplyDecalToSurfaceData(input.positionCS, surfaceData, inputData);
 #endif
+
+    InitializeBakedGIData(input, inputData);
 
     // Stripped down version of UniversalFragmentPBR().
 
