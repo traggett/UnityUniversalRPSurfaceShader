@@ -174,6 +174,39 @@ struct Varyings
 #endif
 };
 
+/////////////////////////////////////////
+// Motion Vectors
+/////////////////////////////////////////
+
+#elif defined(MOTION_VECTOR_PASS)
+
+struct Attributes
+{
+    float4 positionOS            : POSITION;
+	
+#if _ALPHATEST_ON
+    float2 texcoord             : TEXCOORD0;
+#endif
+
+    float3 positionOld          : TEXCOORD4;
+	
+#if _ADD_PRECOMPUTED_VELOCITY
+    float3 alembicMotionVector  : TEXCOORD5;
+#endif
+
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+};
+
+struct Varyings
+{
+    float4 positionCS                 : SV_POSITION;
+    float4 positionCSNoJitter         : POSITION_CS_NO_JITTER;
+    float4 previousPositionCSNoJitter : PREV_POSITION_CS_NO_JITTER;
+    float2 uv                         : TEXCOORD0;
+
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+    UNITY_VERTEX_OUTPUT_STEREO
+};
 
 #endif
 

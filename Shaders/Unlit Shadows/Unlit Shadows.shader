@@ -138,7 +138,7 @@ Shader "Universal Render Pipeline/Unlit Shadows"
             // Includes
 			
             #define SHADOWS_PASS
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPShadowsPass.hlsl"
+			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitShadowsPass.hlsl"
 			
             ENDHLSL
         }
@@ -320,12 +320,27 @@ Shader "Universal Render Pipeline/Unlit Shadows"
             ColorMask RG
 
             HLSLPROGRAM
+			
+			// -------------------------------------
+            // Shader Stages
+            #pragma vertex MotionVectorVertex
+            #pragma fragment MotionVectorVertexFragment
+			
+			// -------------------------------------
+            // Material Keywords
             #pragma shader_feature_local _ALPHATEST_ON
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
             #pragma shader_feature_local_vertex _ADD_PRECOMPUTED_VELOCITY
+			
+			// -------------------------------------
+            // Unity defined keywords
+            #pragma multi_compile _ LOD_FADE_CROSSFADE
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ObjectMotionVectors.hlsl"
+			// -------------------------------------
+            // Includes
+			
+            #define MOTION_VECTOR_PASS
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitObjectMotionVectorPass.hlsl"		
+			
             ENDHLSL
         }
 
@@ -345,12 +360,28 @@ Shader "Universal Render Pipeline/Unlit Shadows"
             }
 
             HLSLPROGRAM
+			
+			// -------------------------------------
+            // Shader Stages
+            #pragma vertex MotionVectorVertex
+            #pragma fragment MotionVectorVertexFragment
+			
+			// -------------------------------------
+            // Material Keywords
             #pragma shader_feature_local _ALPHATEST_ON
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
             #pragma shader_feature_local_vertex _ADD_PRECOMPUTED_VELOCITY
-            #define APLICATION_SPACE_WARP_MOTION 1
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/UnlitInput.hlsl"
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ObjectMotionVectors.hlsl"
+            
+			// -------------------------------------
+            // Unity defined keywords
+            #pragma multi_compile _ LOD_FADE_CROSSFADE
+			#define APLICATION_SPACE_WARP_MOTION 1
+			
+			// -------------------------------------
+            // Includes
+			
+            #define MOTION_VECTOR_PASS
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitObjectMotionVectorPass.hlsl"		
+			
             ENDHLSL
         }
     }
