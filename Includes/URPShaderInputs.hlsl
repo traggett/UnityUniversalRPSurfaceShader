@@ -269,10 +269,7 @@ struct Attributes
 {
     float4 positionOS           : POSITION;
 	float3 normalOS     		: NORMAL;
-		
-#if _ALPHATEST_ON
     float2 texcoord             : TEXCOORD0;
-#endif
 
     float3 positionOld          : TEXCOORD4;
 	

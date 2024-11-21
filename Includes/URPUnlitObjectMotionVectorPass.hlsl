@@ -26,9 +26,7 @@ Varyings MotionVectorVertex(Attributes input)
 
     const VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 
-    #if defined(_ALPHATEST_ON)
-        output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
-    #endif
+    output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 
 #if defined(APLICATION_SPACE_WARP_MOTION)
     // We do not need jittered position in ASW
