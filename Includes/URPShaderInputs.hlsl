@@ -267,8 +267,9 @@ struct Varyings
 
 struct Attributes
 {
-    float4 positionOS            : POSITION;
-	
+    float4 positionOS           : POSITION;
+	float3 normalOS     		: NORMAL;
+		
 #if _ALPHATEST_ON
     float2 texcoord             : TEXCOORD0;
 #endif
