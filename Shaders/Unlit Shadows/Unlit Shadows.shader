@@ -339,7 +339,7 @@ Shader "Universal Render Pipeline/Unlit Shadows"
             // Includes
 			
             #define MOTION_VECTOR_PASS
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }
@@ -380,7 +380,7 @@ Shader "Universal Render Pipeline/Unlit Shadows"
             // Includes
 			
             #define MOTION_VECTOR_PASS
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }

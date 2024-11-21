@@ -287,7 +287,7 @@ Shader "Hidden/Unlit Surface Shader"
             // Includes
 			
             #define MOTION_VECTOR_PASS
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }
@@ -328,7 +328,7 @@ Shader "Hidden/Unlit Surface Shader"
             // Includes
 			
             #define MOTION_VECTOR_PASS
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }

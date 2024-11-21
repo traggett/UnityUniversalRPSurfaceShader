@@ -529,7 +529,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #define MOTION_VECTOR_PASS
 			
 			#include "ExampleShader.hlsl"
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }
@@ -572,7 +572,7 @@ Shader "Universal Render Pipeline/Example Surface Shader"
             #define MOTION_VECTOR_PASS
 			
 			#include "ExampleShader.hlsl"
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }

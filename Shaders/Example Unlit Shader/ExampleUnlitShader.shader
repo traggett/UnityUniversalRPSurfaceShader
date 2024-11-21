@@ -299,7 +299,7 @@ Shader "Universal Render Pipeline/Example Unlit Shader"
             #define MOTION_VECTOR_PASS
 			
 			#include "ExampleUnlitShader.hlsl"
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }
@@ -342,7 +342,7 @@ Shader "Universal Render Pipeline/Example Unlit Shader"
             #define MOTION_VECTOR_PASS
 			
 			#include "ExampleUnlitShader.hlsl"
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }

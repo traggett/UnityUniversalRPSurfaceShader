@@ -513,7 +513,7 @@ Shader "Hidden/Surface Shader"
             // Includes
 			
             #define MOTION_VECTOR_PASS
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }
@@ -554,7 +554,7 @@ Shader "Hidden/Surface Shader"
             // Includes
 			
             #define MOTION_VECTOR_PASS
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }

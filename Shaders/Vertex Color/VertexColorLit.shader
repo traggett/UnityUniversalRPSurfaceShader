@@ -529,7 +529,7 @@
             #define MOTION_VECTOR_PASS
 			
 			#include "VertexColorLit.hlsl"
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }
@@ -572,7 +572,7 @@
             #define MOTION_VECTOR_PASS
 			
 			#include "VertexColorLit.hlsl"
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPObjectMotionVectorPass.hlsl"		
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPMotionVectorPass.hlsl"		
 			
             ENDHLSL
         }
