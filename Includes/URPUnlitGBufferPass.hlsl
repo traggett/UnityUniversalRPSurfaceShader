@@ -65,11 +65,12 @@ FragmentOutput UnlitPassFragment(Varyings input)
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-
-    half2 uv = input.uv;
-    half4 texColor = SampleAlbedoAlpha(uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
-    half3 color = texColor.rgb * _BaseColor.rgb;
-    half alpha = texColor.a * _BaseColor.a;
+	
+	////////////////////////////////
+	half3 color;
+	float alpha;
+	GET_UNLIT_SURFACE_PROPERTIES(input, color, alpha);
+	////////////////////////////////
 
     alpha = AlphaDiscard(alpha, _Cutoff);
     color = AlphaModulate(color, alpha);

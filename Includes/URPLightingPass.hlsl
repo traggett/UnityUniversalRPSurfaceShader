@@ -186,8 +186,9 @@ void LitPassFragment(
     ApplyPerPixelDisplacement(viewDirTS, input.uv);
 #endif
 
-    SurfaceData surfaceData;
-    InitializeStandardLitSurfaceData(input.uv, surfaceData);
+	////////////////////////////////
+    SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
+	////////////////////////////////
 
 #ifdef LOD_FADE_CROSSFADE
     LODFadeCrossFade(input.positionCS);
