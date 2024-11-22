@@ -4,6 +4,9 @@
 #include "URPShaderInputs.hlsl"
 #include "URPMacros.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+#if defined(LOD_FADE_CROSSFADE)
+    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
+#endif
 
 void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData)
 {
