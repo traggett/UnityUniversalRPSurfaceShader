@@ -3,7 +3,10 @@
 
 #include "URPShaderInputs.hlsl"
 #include "URPMacros.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+#if defined(LOD_FADE_CROSSFADE)
+    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
+#endif
 
 void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData)
 {
@@ -13,6 +16,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     inputData.positionWS = input.positionWS;
 #endif
 
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
 #if defined(_NORMALMAP) || defined(_DETAIL)
     float sgn = input.tangentWS.w;      // should be either +1 or -1
     float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
@@ -27,7 +31,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 #endif
 
     inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
-    inputData.viewDirectionWS = input.viewDirWS;
+    inputData.viewDirectionWS = viewDirWS;
 
 #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
     inputData.shadowCoord = input.shadowCoord;
@@ -72,10 +76,6 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 Varyings LitPassVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
-	
-	////////////////////////////////
-	UPDATE_INPUT_VERTEX(input);
-	////////////////////////////////
 
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
@@ -107,10 +107,9 @@ Varyings LitPassVertex(Attributes input)
     output.tangentWS = tangentWS;
 #endif
 
-	output.viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
-
 #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-    half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, output.viewDirWS);
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
+    half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, viewDirWS);
     output.viewDirTS = viewDirTS;
 #endif
 
@@ -134,20 +133,18 @@ Varyings LitPassVertex(Attributes input)
 #endif
 
     output.positionCS = vertexInput.positionCS;
-	
-#if defined(REQUIRES_VERTEX_COLOR)
-    output.color = input.color;
-#endif
-	
-	////////////////////////////////
-	UPDATE_OUTPUT_VERTEX(output);
-	////////////////////////////////
 
     return output;
 }
 
 // Used in Standard (Physically Based) shader
-half4 LitPassFragment(Varyings input) : SV_Target
+void LitPassFragment(
+    Varyings input
+    , out half4 outColor : SV_Target0
+#ifdef _WRITE_RENDERING_LAYERS
+    , out float4 outRenderingLayers : SV_Target1
+#endif
+)
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -165,7 +162,11 @@ half4 LitPassFragment(Varyings input) : SV_Target
 	////////////////////////////////
     SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
 	////////////////////////////////
-	
+
+#ifdef LOD_FADE_CROSSFADE
+    LODFadeCrossFade(input.positionCS);
+#endif
+
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);
     SETUP_DEBUG_TEXTURE_DATA(inputData, input.uv, _BaseMap);
@@ -176,9 +177,14 @@ half4 LitPassFragment(Varyings input) : SV_Target
 
     half4 color = UniversalFragmentPBR(inputData, surfaceData);
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
-    color.a = OutputAlpha(color.a, _Surface);
-	
-    return color;
+    color.a = OutputAlpha(color.a, IsSurfaceTypeTransparent(_Surface));
+
+    outColor = color;
+
+#ifdef _WRITE_RENDERING_LAYERS
+    uint renderingLayers = GetMeshRenderingLayer();
+    outRenderingLayers = float4(EncodeMeshRenderingLayer(renderingLayers), 0, 0, 0);
+#endif
 }
 
 #endif

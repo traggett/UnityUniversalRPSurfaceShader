@@ -5,6 +5,9 @@
 #include "URPMacros.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Unlit.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+#if defined(LOD_FADE_CROSSFADE)
+    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
+#endif
 
 void InitializeInputData(Varyings input, out InputData inputData)
 {
@@ -30,11 +33,11 @@ void InitializeInputData(Varyings input, out InputData inputData)
 Varyings UnlitPassVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
-
+	
 	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
 	////////////////////////////////
-	
+
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
@@ -61,7 +64,7 @@ Varyings UnlitPassVertex(Attributes input)
     output.normalWS = normalInput.normalWS;
     output.viewDirWS = viewDirWS;
     #endif
-
+	
 #if defined(REQUIRES_VERTEX_COLOR)
     output.color = input.color;
 #endif
@@ -73,21 +76,31 @@ Varyings UnlitPassVertex(Attributes input)
     return output;
 }
 
-half4 UnlitPassFragment(Varyings input) : SV_Target
+void UnlitPassFragment(
+    Varyings input
+    , out half4 outColor : SV_Target0
+#ifdef _WRITE_RENDERING_LAYERS
+    , out float4 outRenderingLayers : SV_Target1
+#endif
+)
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-	
+
 	////////////////////////////////
 	half3 color;
 	float alpha;
 	GET_UNLIT_SURFACE_PROPERTIES(input, color, alpha);
 	////////////////////////////////
-
-    AlphaDiscard(alpha, _Cutoff);
-    color = AlphaModulate(color, alpha);
 	
-	InputData inputData;
+    alpha = AlphaDiscard(alpha, _Cutoff);
+    color = AlphaModulate(color, alpha);
+
+#ifdef LOD_FADE_CROSSFADE
+    LODFadeCrossFade(input.positionCS);
+#endif
+
+    InputData inputData;
     InitializeInputData(input, inputData);
     SETUP_DEBUG_TEXTURE_DATA(inputData, input.uv, _BaseMap);
 
@@ -115,8 +128,14 @@ half4 UnlitPassFragment(Varyings input) : SV_Target
     half fogFactor = input.fogCoord;
 #endif
     finalColor.rgb = MixFog(finalColor.rgb, fogFactor);
+    finalColor.a = OutputAlpha(finalColor.a, IsSurfaceTypeTransparent(_Surface));
 
-    return finalColor;
+    outColor = finalColor;
+
+#ifdef _WRITE_RENDERING_LAYERS
+    uint renderingLayers = GetMeshRenderingLayer();
+    outRenderingLayers = float4(EncodeMeshRenderingLayer(renderingLayers), 0, 0, 0);
+#endif
 }
 
 #endif

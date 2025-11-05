@@ -5,21 +5,21 @@
 #include "URPMacros.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
 
-Varyings UniversalVertexMeta(Attributes input)
+Varyings UniversalVertexMetaUnlit(Attributes input)
 {
-    Varyings output;
+    Varyings output = (Varyings)0;
 	
 	////////////////////////////////
 	UPDATE_INPUT_VERTEX(input);
 	////////////////////////////////
-
+	
     output.positionCS = UnityMetaVertexPosition(input.positionOS.xyz, input.texcoord2, input.texcoord3);
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 	
 #ifdef EDITOR_VISUALIZATION
-    UnityEditorVizData(input.positionOS.xyz, input.texcoord, input.texcoord2, input.texcoord3, output.VizUV, output.LightCoord);
+    UnityEditorVizData(input.positionOS.xyz, input.uv0, input.uv1, input.uv2, output.VizUV, output.LightCoord);
 #endif
-	
+
 	////////////////////////////////
 	UPDATE_OUTPUT_VERTEX(output);
 	////////////////////////////////
@@ -29,7 +29,7 @@ Varyings UniversalVertexMeta(Attributes input)
 
 half4 UniversalFragmentMetaUnlit(Varyings input) : SV_Target
 {
-    MetaInput metaInput = (MetaInput)0;
+	MetaInput metaInput = (MetaInput)0;
 	
 	////////////////////////////////
 	half3 color;
@@ -37,17 +37,15 @@ half4 UniversalFragmentMetaUnlit(Varyings input) : SV_Target
 	GET_UNLIT_SURFACE_PROPERTIES(input, color, alpha);
 	////////////////////////////////
 	
-	AlphaDiscard(alpha, _Cutoff);
-    color = AlphaModulate(color, alpha);
-	
-    metaInput.Albedo = color;
+    //metaInput.Albedo = _BaseColor.rgb * SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb;
 	
 #ifdef EDITOR_VISUALIZATION
-    metaInput.VizUV = fragIn.VizUV;
-    metaInput.LightCoord = fragIn.LightCoord;
+    metaInput.VizUV = input.VizUV;
+    metaInput.LightCoord = input.LightCoord;
 #endif
 
     return UnityMetaFragment(metaInput);
 }
+
 
 #endif

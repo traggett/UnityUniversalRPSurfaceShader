@@ -3,9 +3,11 @@
 
 #include "URPShaderInputs.hlsl"
 #include "URPMacros.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
+#if defined(LOD_FADE_CROSSFADE)
+    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
+#endif
 
 void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData)
 {
@@ -16,6 +18,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     #endif
 
     inputData.positionCS = input.positionCS;
+    half3 viewDirWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
     #if defined(_NORMALMAP) || defined(_DETAIL)
         float sgn = input.tangentWS.w;      // should be either +1 or -1
         float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
@@ -25,7 +28,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     #endif
 
     inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
-    inputData.viewDirectionWS = input.viewDirWS;
+    inputData.viewDirectionWS = viewDirWS;
 
     #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
         inputData.shadowCoord = input.shadowCoord;
@@ -90,11 +93,10 @@ Varyings LitGBufferPassVertex(Attributes input)
     #if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
         output.tangentWS = tangentWS;
     #endif
-	
-	output.viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
 
     #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-        half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, output.viewDirWS);
+        half3 viewDirWS = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
+        half3 viewDirTS = GetViewDirectionTangentSpace(tangentWS, output.normalWS, viewDirWS);
         output.viewDirTS = viewDirTS;
     #endif
 
@@ -137,17 +139,22 @@ FragmentOutput LitGBufferPassFragment(Varyings input)
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
 #if defined(_PARALLAXMAP)
-#if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-    half3 viewDirTS = input.viewDirTS;
-#else
-    half3 viewDirTS = GetViewDirectionTangentSpace(input.tangentWS, input.normalWS, input.viewDirWS);
-#endif
+    #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
+        half3 viewDirTS = input.viewDirTS;
+    #else
+        half3 viewDirWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
+        half3 viewDirTS = GetViewDirectionTangentSpace(input.tangentWS, input.normalWS, viewDirWS);
+    #endif
     ApplyPerPixelDisplacement(viewDirTS, input.uv);
 #endif
 
 	////////////////////////////////
     SurfaceData surfaceData = GET_SURFACE_PROPERTIES(input);
 	////////////////////////////////
+
+#ifdef LOD_FADE_CROSSFADE
+    LODFadeCrossFade(input.positionCS);
+#endif
 
     InputData inputData;
     InitializeInputData(input, surfaceData.normalTS, inputData);

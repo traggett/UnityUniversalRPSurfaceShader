@@ -4,6 +4,12 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 
+#if defined(GBUFFER_PASS)
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+
+#endif
+
 /////////////////////////////////////////
 // Forward Lighting
 /////////////////////////////////////////
@@ -61,6 +67,36 @@ struct Varyings
 {
     float2 uv           : TEXCOORD0;
     float4 positionCS   : SV_POSITION;
+};
+
+/////////////////////////////////////////
+// G Buffer
+/////////////////////////////////////////
+
+#elif defined(GBUFFER_PASS)
+
+struct Attributes
+{
+    float4 positionOS : POSITION;
+    float2 texcoord : TEXCOORD0;
+    float3 normalOS : NORMAL;
+	float4 color	: COLOR;
+	
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+};
+
+struct Varyings
+{
+    float4 positionCS : SV_POSITION;
+    float2 uv : TEXCOORD0;
+    float3 normalWS : TEXCOORD1;
+	
+#if defined(REQUIRES_VERTEX_COLOR)
+    float4 color               		: COLOR;
+#endif
+
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+    UNITY_VERTEX_OUTPUT_STEREO
 };
 
 /////////////////////////////////////////
@@ -138,6 +174,36 @@ struct Varyings
 #endif
 };
 
+/////////////////////////////////////////
+// Motion Vectors
+/////////////////////////////////////////
+
+#elif defined(MOTION_VECTOR_PASS)
+
+struct Attributes
+{
+    float4 positionOS           : POSITION;
+	float3 normalOS     		: NORMAL;
+    float2 texcoord             : TEXCOORD0;
+    float3 positionOld          : TEXCOORD4;
+	
+#if _ADD_PRECOMPUTED_VELOCITY
+    float3 alembicMotionVector  : TEXCOORD5;
+#endif
+
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+};
+
+struct Varyings
+{
+    float4 positionCS                 : SV_POSITION;
+    float4 positionCSNoJitter         : POSITION_CS_NO_JITTER;
+    float4 previousPositionCSNoJitter : PREV_POSITION_CS_NO_JITTER;
+    float2 uv                         : TEXCOORD0;
+
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+    UNITY_VERTEX_OUTPUT_STEREO
+};
 
 #endif
 

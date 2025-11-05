@@ -17,6 +17,7 @@ Shader "Universal Render Pipeline/Example Unlit Shader"
         [HideInInspector] _SrcBlendAlpha("__srcA", Float) = 1.0
         [HideInInspector] _DstBlendAlpha("__dstA", Float) = 0.0
         [HideInInspector] _ZWrite("__zw", Float) = 1.0
+        [HideInInspector] _AlphaToMask("__alphaToMask", Float) = 0.0
 
         // Editmode props
         _QueueOffset("Queue offset", Float) = 0.0
@@ -29,9 +30,17 @@ Shader "Universal Render Pipeline/Example Unlit Shader"
 
     SubShader
     {
-        Tags {"RenderType" = "Opaque" "IgnoreProjector" = "True" "RenderPipeline" = "UniversalPipeline" "ShaderModel"="4.5"}
+        Tags
+        {
+            "RenderType" = "Opaque"
+            "IgnoreProjector" = "True"
+            "UniversalMaterialType" = "Unlit"
+            "RenderPipeline" = "UniversalPipeline"
+        }
         LOD 100
 
+        // -------------------------------------
+        // Render State Commands
         Blend [_SrcBlend][_DstBlend], [_SrcBlendAlpha][_DstBlendAlpha]
         ZWrite [_ZWrite]
         Cull [_Cull]
@@ -40,10 +49,15 @@ Shader "Universal Render Pipeline/Example Unlit Shader"
         {
             Name "Unlit"
 
-            HLSLPROGRAM
-            #pragma exclude_renderers gles gles3 glcore
-            #pragma target 4.5
+            // -------------------------------------
+            // Render State Commands
+            AlphaToMask[_AlphaToMask]
 
+            HLSLPROGRAM
+            #pragma target 2.0
+
+            // -------------------------------------
+            // Material Keywords
             #pragma shader_feature_local_fragment _SURFACE_TYPE_TRANSPARENT
             #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma shader_feature_local_fragment _ALPHAMODULATE_ON
@@ -51,210 +65,165 @@ Shader "Universal Render Pipeline/Example Unlit Shader"
             // -------------------------------------
             // Unity defined keywords
             #pragma multi_compile_fog
-            #pragma multi_compile_instancing
-            #pragma multi_compile _ DOTS_INSTANCING_ON
             #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
             #pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
             #pragma multi_compile _ DEBUG_DISPLAY
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
 
+            //--------------------------------------
+            // GPU Instancing
+            #pragma multi_compile_instancing
+            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+			
+			// -------------------------------------
+            // Shader Stages
+			#define FORWARD_PASS
             #pragma vertex UnlitPassVertex
             #pragma fragment UnlitPassFragment
-
-            #define FORWARD_PASS
 			
+            // -------------------------------------
+            // Includes
 			#include "ExampleUnlitShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitForwardPass.hlsl"
+            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitForwardPass.hlsl"
+			
             ENDHLSL
         }
 
+        // Fill GBuffer data to prevent "holes", just in case someone wants to reuse GBuffer for non-lighting effects.
+        // Deferred lighting is stenciled out.
         Pass
         {
-            Name "DepthOnly"
-            Tags{"LightMode" = "DepthOnly"}
-
-            ZWrite On
-            ColorMask R
+            Name "GBuffer"
+            Tags
+            {
+                "LightMode" = "UniversalGBuffer"
+            }
 
             HLSLPROGRAM
-            #pragma exclude_renderers gles gles3 glcore
             #pragma target 4.5
 
-            #pragma vertex DepthOnlyVertex
-            #pragma fragment DepthOnlyFragment
-
+            // Deferred Rendering Path does not support the OpenGL-based graphics API:
+            // Desktop OpenGL, OpenGL ES 3.0, WebGL 2.0.
+            #pragma exclude_renderers gles3 glcore
+			
             // -------------------------------------
             // Material Keywords
-            #pragma shader_feature_local_fragment _ALPHATEST_ON
-
-            //--------------------------------------
-            // GPU Instancing
-            #pragma multi_compile_instancing
-            #pragma multi_compile _ DOTS_INSTANCING_ON
-
-            #define DEPTH_ONLY_PASS
-			
-			#include "ExampleUnlitShader.hlsl"
-			#include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthOnlyPass.hlsl"
-            ENDHLSL
-        }
-
-        Pass
-        {
-            Name "DepthNormalsOnly"
-            Tags{"LightMode" = "DepthNormalsOnly"}
-
-            ZWrite On
-
-            HLSLPROGRAM
-            #pragma exclude_renderers gles gles3 glcore
-            #pragma target 4.5
-
-            #pragma vertex DepthNormalsVertex
-            #pragma fragment DepthNormalsFragment
-
-            // -------------------------------------
-            // Material Keywords
-            #pragma shader_feature_local_fragment _ALPHATEST_ON
-
-            // -------------------------------------
-            // Unity defined keywords
-            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT // forward-only variant
-
-            //--------------------------------------
-            // GPU Instancing
-            #pragma multi_compile_instancing
-            #pragma multi_compile _ DOTS_INSTANCING_ON
-
-            #define DEPTH_NORMALS_PASS
-			
-			#include "ExampleUnlitShader.hlsl"
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthNormalsPass.hlsl"
-            ENDHLSL
-        }
-
-        // This pass it not used during regular rendering, only for lightmap baking.
-        Pass
-        {
-            Name "Meta"
-            Tags{"LightMode" = "Meta"}
-
-            Cull Off
-
-            HLSLPROGRAM
-            #pragma exclude_renderers gles gles3 glcore
-            #pragma target 4.5
-
-            #pragma vertex UniversalVertexMeta
-            #pragma fragment UniversalFragmentMetaUnlit
-            #pragma shader_feature EDITOR_VISUALIZATION
-
-            #define META_PASS
-			
-			#include "ExampleUnlitShader.hlsl"
-            #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMetaPass.hlsl"
-            ENDHLSL
-        }
-    }
-
-    SubShader
-    {
-        Tags {"RenderType" = "Opaque" "IgnoreProjector" = "True" "RenderPipeline" = "UniversalPipeline" "ShaderModel"="2.0"}
-        LOD 100
-
-        Blend [_SrcBlend][_DstBlend], [_SrcBlendAlpha][_DstBlendAlpha]
-        ZWrite [_ZWrite]
-        Cull [_Cull]
-
-        Pass
-        {
-            Name "Unlit"
-
-            HLSLPROGRAM
-            #pragma only_renderers gles gles3 glcore d3d11
-            #pragma target 2.0
-
-            #pragma shader_feature_local_fragment _SURFACE_TYPE_TRANSPARENT
             #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma shader_feature_local_fragment _ALPHAMODULATE_ON
 
             // -------------------------------------
             // Unity defined keywords
-            #pragma multi_compile_fog
-            #pragma multi_compile_instancing
             #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
-            #pragma multi_compile _ DEBUG_DISPLAY
+            #pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
 
+            //--------------------------------------
+            // GPU Instancing
+            #pragma multi_compile_instancing
+            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+
+			// -------------------------------------
+            // Shader Stages
+			#define FORWARD_PASS
             #pragma vertex UnlitPassVertex
             #pragma fragment UnlitPassFragment
-
-            #define FORWARD_PASS
 			
+            // -------------------------------------
+            // Includes
 			#include "ExampleUnlitShader.hlsl"
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitForwardPass.hlsl"
+			
             ENDHLSL
         }
 
         Pass
         {
             Name "DepthOnly"
-            Tags{"LightMode" = "DepthOnly"}
+            Tags
+            {
+                "LightMode" = "DepthOnly"
+            }
 
+            // -------------------------------------
+            // Render State Commands
             ZWrite On
             ColorMask R
 
             HLSLPROGRAM
-            #pragma only_renderers gles gles3 glcore d3d11
             #pragma target 2.0
 
-            #pragma vertex DepthOnlyVertex
-            #pragma fragment DepthOnlyFragment
 
             // -------------------------------------
             // Material Keywords
-            #pragma shader_feature_local_fragment _ALPHATEST_ON
+            #pragma shader_feature_local _ALPHATEST_ON
+
+            // -------------------------------------
+            // Unity defined keywords
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
 
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
+            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
-            #define DEPTH_ONLY_PASS
+            // -------------------------------------
+            // Shader Stages
+			#define DEPTH_ONLY_PASS
+            #pragma vertex DepthOnlyVertex
+            #pragma fragment DepthOnlyFragment
 			
+            // -------------------------------------
+            // Includes
 			#include "ExampleUnlitShader.hlsl"
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthOnlyPass.hlsl"
+			
             ENDHLSL
         }
 
         Pass
         {
             Name "DepthNormalsOnly"
-            Tags{"LightMode" = "DepthNormalsOnly"}
+            Tags
+            {
+                "LightMode" = "DepthNormalsOnly"
+            }
 
+            // -------------------------------------
+            // Render State Commands
             ZWrite On
 
             HLSLPROGRAM
-            #pragma only_renderers gles gles3 glcore
             #pragma target 2.0
-
-            #pragma vertex DepthNormalsVertex
-            #pragma fragment DepthNormalsFragment
 
             // -------------------------------------
             // Material Keywords
-            #pragma shader_feature_local_fragment _ALPHATEST_ON
+            #pragma shader_feature_local _ALPHATEST_ON
 
             // -------------------------------------
-            // Unity defined keywords
+            // Universal Pipeline keywords
             #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT // forward-only variant
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
 
             //--------------------------------------
             // GPU Instancing
             #pragma multi_compile_instancing
-            #pragma multi_compile _ DOTS_INSTANCING_ON
+            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
-            #define DEPTH_NORMALS_PASS
+            // -------------------------------------
+            // Shader Stages
+			#define DEPTH_NORMALS_PASS
+            #pragma vertex DepthNormalsVertex
+            #pragma fragment DepthNormalsFragment
 			
+            // -------------------------------------
+            // Includes
 			#include "ExampleUnlitShader.hlsl"
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitDepthNormalsPass.hlsl"
+			
             ENDHLSL
         }
 
@@ -262,25 +231,37 @@ Shader "Universal Render Pipeline/Example Unlit Shader"
         Pass
         {
             Name "Meta"
-            Tags{"LightMode" = "Meta"}
+            Tags
+            {
+                "LightMode" = "Meta"
+            }
 
+            // -------------------------------------
+            // Render State Commands
             Cull Off
 
             HLSLPROGRAM
-            #pragma only_renderers gles gles3 glcore d3d11
             #pragma target 2.0
 
-            #pragma vertex UniversalVertexMeta
-            #pragma fragment UniversalFragmentMetaUnlit
+            // -------------------------------------
+            // Unity defined keywords
             #pragma shader_feature EDITOR_VISUALIZATION
 
-            #define META_PASS
+            // -------------------------------------
+            // Shader Stages
+			#define META_PASS
+            #pragma vertex UniversalVertexMetaUnlit
+            #pragma fragment UniversalFragmentMetaUnlit
 			
+            // -------------------------------------
+            // Includes
 			#include "ExampleUnlitShader.hlsl"
             #include "Packages/com.clarky.urpsurfaceshader/Includes/URPUnlitMetaPass.hlsl"
+			
             ENDHLSL
         }
     }
+
     FallBack "Hidden/Universal Render Pipeline/FallbackError"
     CustomEditor "UnityEditor.Rendering.Universal.ShaderGUI.UnlitShader"
 }
