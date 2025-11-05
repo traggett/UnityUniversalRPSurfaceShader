@@ -33,14 +33,14 @@ void InitializeInputData(Varyings input, out InputData inputData)
 Varyings UnlitPassVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
-	
-	////////////////////////////////
-	UPDATE_INPUT_VERTEX(input);
-	////////////////////////////////
 
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+		
+	////////////////////////////////
+	UPDATE_INPUT_VERTEX(input);
+	////////////////////////////////
 
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 

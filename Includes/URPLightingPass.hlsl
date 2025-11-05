@@ -80,6 +80,10 @@ Varyings LitPassVertex(Attributes input)
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+	
+	////////////////////////////////
+	UPDATE_INPUT_VERTEX(input);
+	////////////////////////////////
 
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 
@@ -133,6 +137,10 @@ Varyings LitPassVertex(Attributes input)
 #endif
 
     output.positionCS = vertexInput.positionCS;
+	
+	////////////////////////////////
+	UPDATE_OUTPUT_VERTEX(output);
+	////////////////////////////////
 
     return output;
 }
