@@ -77,6 +77,7 @@ struct Varyings
 #endif
 
     float4 positionCS               : SV_POSITION;
+	
     UNITY_VERTEX_INPUT_INSTANCE_ID
     UNITY_VERTEX_OUTPUT_STEREO
 };
